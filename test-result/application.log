@@ -1,0 +1,31 @@
+15 Mar 2011 06:29:30,904 INFO  ~ Starting /Users/felipera/development/elasticsearch
+15 Mar 2011 06:29:31,724 WARN  ~ You're running Play! in DEV mode
+15 Mar 2011 06:29:31,821 INFO  ~ Listening for HTTP on port 9000 (Waiting a first request to start) ...
+15 Mar 2011 06:29:33,202 INFO  ~ Starting Play! Elastic Search in Local Mode
+15 Mar 2011 06:29:33,277 INFO  ~ [John Ryker] {elasticsearch/0.15.2}[82200]: initializing ...
+15 Mar 2011 06:29:33,283 INFO  ~ [John Ryker] loaded []
+15 Mar 2011 06:29:35,044 INFO  ~ [John Ryker] {elasticsearch/0.15.2}[82200]: initialized
+15 Mar 2011 06:29:35,044 INFO  ~ [John Ryker] {elasticsearch/0.15.2}[82200]: starting ...
+15 Mar 2011 06:29:35,076 INFO  ~ [John Ryker] bound_address {local[1]}, publish_address {local[1]}
+15 Mar 2011 06:29:35,081 INFO  ~ [John Ryker] new_master [John Ryker][1][local[1]]{local=true}, reason: local-disco-initial_connect(master)
+15 Mar 2011 06:29:35,084 INFO  ~ [John Ryker] elasticsearch/1
+15 Mar 2011 06:29:35,147 INFO  ~ [John Ryker] bound_address {inet[/0.0.0.0:9200]}, publish_address {inet[/192.168.1.6:9200]}
+15 Mar 2011 06:29:35,148 INFO  ~ [John Ryker] {elasticsearch/0.15.2}[82200]: started
+15 Mar 2011 06:29:35,395 INFO  ~ Connected to jdbc:hsqldb:mem:playembed
+15 Mar 2011 06:29:36,219 INFO  ~ Application 'elasticsearch' is now started !
+15 Mar 2011 06:29:37,715 ERROR ~ 
+
+@65mmd3ai2
+Internal Server Error (500) for request GET /@tests.list
+
+No route found
+No route able to display file {module:testrunner}/public/test-runner/selenium/TestRunner.html was found.
+
+play.exceptions.NoRouteFoundException: No route found
+	at play.mvc.Router.reverse(Router.java:358)
+	at play.mvc.Router.reverse(Router.java:324)
+	at controllers.TestRunner.list(TestRunner.java:32)
+	at play.mvc.ActionInvoker.invokeControllerMethod(ActionInvoker.java:408)
+	at play.mvc.ActionInvoker.invokeControllerMethod(ActionInvoker.java:403)
+	at play.mvc.ActionInvoker.invoke(ActionInvoker.java:176)
+	at Invocation.HTTP Request(Play!)

@@ -13,73 +13,85 @@ import play.db.Model;
 import play.modules.elasticsearch.ElasticSearchPlugin;
 
 public class ElasticSearchPlugin extends PlayPlugin {
-	
+
 	private ThreadLocal<Client> _session = new ThreadLocal<Client>();
-    
-    public Client client() {
-        return _session.get();
-    }
-	
-	Node node = null;
-	Client client = null;
 
-    @Override
-    public void onApplicationStart() {
-        NodeBuilder nb = nodeBuilder();
-        
-        boolean local = false;
-        if (!Play.configuration.containsKey("elasticsearch.local")) {
-        	local = Boolean.getBoolean(Play.configuration.getProperty("elasticsearch.local"));
-            nb = nb.local(local);
-        }
-        
-        boolean client = false;
-        if (!Play.configuration.containsKey("elasticsearch.client")) {
-        	client = Boolean.getBoolean(Play.configuration.getProperty("elasticsearch.client"));
-            nb = nb.client(client);
-        }
-        
-        if ( local == false && client == false ) {
-        	local = true;
-        	nb = nb.local(local);
-        }
-        
-        if ( local ) {
-        	Logger.info("Starting Play! Elastic Search in Local Mode");
-        } else {
-        	Logger.info("Starting Play! Elastic Search in Client Mode");
-        }
-        
-        this.node = nb.node();
-        this.client = this.node.client();
-        
-        _session.set(this.client);
-         
-    }
+	public Client client() {
+		return _session.get();
+	}
 
-    @Override
-    public void onEvent(String message, Object context) {
-    	ElasticSearchPlugin plugin = Play.plugin(ElasticSearchPlugin.class);
-        Client client = plugin.client();
-        
-        try {
-        
-        Logger.info("Message: %s, Object: %s", message, context);
-        
-        if (!message.startsWith("JPASupport"))
-            return;
-        
-        if (message.equals("JPASupport.objectPersisted") || message.equals("JPASupport.objectUpdated")) {
-        	ElasticSearchAdapter.indexModel( this.client(), context.getClass().getName(), (Model)context );
-        	
-        } else if (message.equals("JPASupport.objectDeleted")) {
-        	ElasticSearchAdapter.deleteModel( this.client(), context.getClass().getName(), (Model)context );
-        }
-        
-        } catch (Throwable t) {
-        	throw new RuntimeException( t );
-        }
-        
-    }
+	@Override
+	public void onApplicationStart() {
+		NodeBuilder nb = nodeBuilder();
+
+		boolean localMode = false;
+		if (!Play.configuration.containsKey("elasticsearch.local")) {
+			localMode = Boolean.getBoolean(Play.configuration
+					.getProperty("elasticsearch.local"));
+			nb = nb.local(localMode);
+		}
+
+		boolean clientMode = false;
+		if (!Play.configuration.containsKey("elasticsearch.client")) {
+			clientMode = Boolean.getBoolean(Play.configuration
+					.getProperty("elasticsearch.client"));
+			nb = nb.client(clientMode);
+		}
+
+		if (localMode == false && clientMode == false) {
+			localMode = true;
+			nb = nb.local(localMode);
+		}
+
+		if (localMode) {
+			Logger.info("Starting Play! Elastic Search in Local Mode");
+		} else {
+			Logger.info("Starting Play! Elastic Search in Client Mode");
+		}
+
+		Node node = nb.node();
+		Client client = node.client();
+
+		_session.set(client);
+
+	}
+
+	@Override
+	public void onEvent(String message, Object context) {
+		ElasticSearchPlugin plugin = Play.plugin(ElasticSearchPlugin.class);
+		Client client = plugin.client();
+
+		try {
+
+			ElasticSearchEntity clazz = context.getClass().getAnnotation(
+					ElasticSearchEntity.class);
+			if (clazz == null) {
+				// Logger.info("No ElasticSearchEntity Found - Message: %s, Object: %s, Class: class",
+				// message, context, context.getClass().getName());
+				return;
+			} else {
+				Logger.info(
+						"@ElasticSearchEntity - Message: %s, Object: %s, Class: class",
+						message, context, context.getClass().getName());
+			}
+
+			if (!message.startsWith("JPASupport"))
+				return;
+
+			if (message.equals("JPASupport.objectPersisted")
+					|| message.equals("JPASupport.objectUpdated")) {
+				ElasticSearchAdapter.indexModel(this.client(), context
+						.getClass().getName(), (Model) context);
+
+			} else if (message.equals("JPASupport.objectDeleted")) {
+				ElasticSearchAdapter.deleteModel(this.client(), context
+						.getClass().getName(), (Model) context);
+			}
+
+		} catch (Throwable t) {
+			throw new RuntimeException(t);
+		}
+
+	}
 
 }
