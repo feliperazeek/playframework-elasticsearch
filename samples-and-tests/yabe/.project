@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+	<name>Yet Another Blog Engine</name>
+	<comment></comment>
+	<projects>
+	</projects>
+	<buildSpec>
+		<buildCommand>
+			<name>org.eclipse.jdt.core.javabuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+	</buildSpec>
+	<natures>
+		<nature>org.eclipse.jdt.core.javanature</nature>
+		<nature>org.playframework.playclipse.playNature</nature>
+	</natures>
+	<linkedResources><link><name>linkedin-0.2.1</name><type>2</type><location>/Users/felipera/Downloads/play-1.1/modules/linkedin-0.2.1/app</location></link>
+<link><name>conf/linkedin-0.2.1</name><type>2</type><location>/Users/felipera/Downloads/play-1.1/modules/linkedin-0.2.1/conf</location></link>
+<link><name>crud</name><type>2</type><location>/Users/felipera/Downloads/play-1.1/modules/crud/app</location></link>
+<link><name>conf/crud</name><type>2</type><location>/Users/felipera/Downloads/play-1.1/modules/crud/conf</location></link>
+<link><name>public/crud</name><type>2</type><location>/Users/felipera/Downloads/play-1.1/modules/crud/public</location></link>
+<link><name>elasticsearch</name><type>2</type><location>/Users/felipera/development/elasticsearch/app</location></link>
+<link><name>conf/elasticsearch</name><type>2</type><location>/Users/felipera/development/elasticsearch/conf</location></link>
+<link><name>secure</name><type>2</type><location>/Users/felipera/Downloads/play-1.1/modules/secure/app</location></link>
+<link><name>conf/secure</name><type>2</type><location>/Users/felipera/Downloads/play-1.1/modules/secure/conf</location></link>
+<link><name>public/secure</name><type>2</type><location>/Users/felipera/Downloads/play-1.1/modules/secure/public</location></link>
+</linkedResources>
+</projectDescription>
