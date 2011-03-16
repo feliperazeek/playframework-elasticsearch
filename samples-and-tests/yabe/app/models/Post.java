@@ -13,28 +13,22 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
-import play.data.binding.As;
 import play.data.validation.MaxSize;
-import play.data.validation.Required;
-import play.db.jpa.Model;
 import play.modules.elasticsearch.*;
 
 @Entity
-@ElasticSearchEntity
-public class Post extends Model {
+@ElasticSearchable
+public class Post extends ElasticSearchModel<Post> {
  
-    @Required
     public String title;
     
-    @Required @As("yyyy-MM-dd")
+
     public Date postedAt;
     
     @Lob
-    @Required
     @MaxSize(10000)
     public String content;
     
-    @Required
     @ManyToOne
     public User author;
     

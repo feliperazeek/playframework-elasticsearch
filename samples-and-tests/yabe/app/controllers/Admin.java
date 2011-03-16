@@ -16,7 +16,7 @@ public class Admin extends Controller {
         if(Security.isConnected()) {
         	Logger.info("Connected User: %s", Security.connected());
         	User user = User.findConnectedUser(Security.connected());
-        	if ( user.headline != null && user.pictureUrl != null ) {
+        	if ( user != null && user.headline != null && user.pictureUrl != null ) {
         		String userInfo = user.fullname + " (" + user.headline + ") <img src='" + user.pictureUrl + "' border='0'>";
         		renderArgs.put("user", userInfo);
         	} else {

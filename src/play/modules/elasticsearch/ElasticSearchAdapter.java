@@ -1,65 +1,158 @@
 package play.modules.elasticsearch;
 
-import play.Logger;
-import play.db.Model;
-import play.modules.elasticsearch.ElasticSearchPlugin;
+import java.util.ArrayList;
+import java.util.List;
 
-import java.util.Date;
-import static org.elasticsearch.common.xcontent.XContentFactory.*;
-import static org.elasticsearch.index.query.xcontent.FilterBuilders.*;
-import static org.elasticsearch.index.query.xcontent.QueryBuilders.*;
-
+import org.apache.commons.lang.StringUtils;
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
+import org.elasticsearch.action.delete.DeleteResponse;
+import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.client.action.index.IndexRequestBuilder;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
-import org.elasticsearch.node.Node;
-import org.elasticsearch.node.NodeBuilder;
-import java.io.*;
 
+import play.Logger;
+import play.db.Model;
+
+// TODO: Auto-generated Javadoc
+/**
+ * The Class ElasticSearchAdapter.
+ * 
+ */
 public abstract class ElasticSearchAdapter {
 
-	public static byte[] convert(Object obj) throws IOException {
-		ObjectOutputStream os = null;
-
-		ByteArrayOutputStream byteStream = new ByteArrayOutputStream(5000);
-		os = new ObjectOutputStream(new BufferedOutputStream(byteStream));
-		os.flush();
-		os.writeObject(obj);
-		os.flush();
-		byte[] sendBuf = byteStream.toByteArray();
-		os.close();
-		return sendBuf;
+	/** The IGNOR e_ fields. */
+	private static List<String> IGNORE_FIELDS = new ArrayList<String>();
+	static {
+		IGNORE_FIELDS.add("avoidCascadeSaveLoops");
+		IGNORE_FIELDS.add("willBeSaved");
+		IGNORE_FIELDS.add("serialVersionId");
 	}
 
-	public static void indexModel(Client client, String indexName, Model model)
+	/**
+	 * Start index.
+	 * 
+	 * @param client
+	 *            the client
+	 * @param clazz
+	 *            the clazz
+	 */
+	public static void startIndex(Client client, Class<?> clazz) {
+		try {
+			String indexName = getIndexName(clazz);
+			Logger.info("Starting index %s for class %s", indexName, clazz);
+			client.admin().indices().create(new CreateIndexRequest(indexName))
+					.actionGet();
+		} catch (Throwable t) {
+			Logger.warn(ExceptionUtil.getStackTrace(t));
+		}
+	}
+
+	/**
+	 * Index model.
+	 * 
+	 * @param <T>
+	 *            the generic type
+	 * @param client
+	 *            the client
+	 * @param model
+	 *            the model
+	 * @throws Exception
+	 *             the exception
+	 */
+	public static <T extends Model> void indexModel(Client client, T model)
 			throws Exception {
-		Logger.info("Index Model: %s", model);
+		// Log Debug
+		Logger.info("Start Index Model: %s", model);
 
-		// String json = getMapper().writeValueAsString(model);
-		// Logger.info("JSON: %s", json);
+		// Start Mapping Object
+		XContentBuilder b = XContentFactory.jsonBuilder().startObject();
 
-		// XContent x = XContentFactory.xContent(convert(model));
+		// Get list fields that should not be ignored (@ElasticSearchIgnore)
+		List<String> fields = ReflectionUtil.getAllFieldNamesWithoutAnnotation(
+				model.getClass(), ElasticSearchIgnore.class);
 
-		IndexRequestBuilder irb = client.prepareIndex(indexName.toLowerCase(),
-				indexName.toLowerCase(), String.valueOf(model._key()))
-				.setSource(XContentFactory.jsonBuilder());
+		// Loop into each field
+		for (String name : fields) {
+			if (StringUtils.isNotBlank(name)
+					&& IGNORE_FIELDS.contains(name) == false) {
+				if (name.equalsIgnoreCase("id")) {
+					name = name.replaceFirst(model.getClass()
+							.getCanonicalName() + ".", "");
+					Object value = ReflectionUtil.getFieldValue(model, name);
+					if (value != null) {
+						Logger.info("Field: " + name + ", Value: " + value);
+						b.field(name, value);
+					} else {
+						Logger.info("No Value for Field: " + name);
+					}
+				} else {
+					b.field(name, model._key());
+				}
+			}
+		}
 
-		// .setSource(XContentFactory.)
+		// Done Mapping
+		b.endObject();
 
-		// .setSource(XContentFactory.xContent(convert(model)));
-		// irb.execute().actionGet();
+		// Send Job
+		GetResponse response = client
+				.prepareGet(getIndexName(model), getIndexName(model),
+						String.valueOf(model._key())).execute().actionGet();
 
+		// Log Debug
+		Logger.info("Index Response: %s", response);
 	}
 
-	public static void deleteModel(Client client, String indexName, Model model)
+	/**
+	 * Delete model.
+	 * 
+	 * @param <T>
+	 *            the generic type
+	 * @param client
+	 *            the client
+	 * @param model
+	 *            the model
+	 * @throws Exception
+	 *             the exception
+	 */
+	public static <T extends Model> void deleteModel(Client client, T model)
 			throws Exception {
 		Logger.info("Delete Model: %s", model);
 
-		client.prepareDelete(indexName.toLowerCase(), indexName.toLowerCase(),
-				String.valueOf(model._key())).setOperationThreaded(false)
-				.execute().actionGet();
+		DeleteResponse response = client
+				.prepareDelete(getIndexName(model), getIndexName(model),
+						String.valueOf(model._key()))
+				.setOperationThreaded(false).execute().actionGet();
 
+		Logger.info("Delete Response: %s", response);
+
+	}
+
+	/**
+	 * Gets the index name.
+	 * 
+	 * @param model
+	 *            the model
+	 * @return the index name
+	 */
+	private static String getIndexName(Model model) {
+		return getIndexName(model.getClass());
+	}
+
+	/**
+	 * Gets the index name.
+	 * 
+	 * @param clazz
+	 *            the clazz
+	 * @return the index name
+	 */
+	private static String getIndexName(Class<?> clazz) {
+		Logger.info("Class: %s", clazz);
+		String value = clazz.getName().toLowerCase().trim().replace('.', '_');
+		value = value.substring(1);
+		value = value.substring(0, value.length() -2);
+		return value;
 	}
 
 }

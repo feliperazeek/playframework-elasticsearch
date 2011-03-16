@@ -2,6 +2,9 @@ package play.modules.elasticsearch;
 
 import static org.elasticsearch.node.NodeBuilder.nodeBuilder;
 
+import java.util.Set;
+
+import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
@@ -9,21 +12,45 @@ import org.elasticsearch.node.NodeBuilder;
 import play.Logger;
 import play.Play;
 import play.PlayPlugin;
-import play.db.Model;
-import play.modules.elasticsearch.ElasticSearchPlugin;
 
+// TODO: Auto-generated Javadoc
+/**
+ * The Class ElasticSearchPlugin.
+ */
 public class ElasticSearchPlugin extends PlayPlugin {
 
+	/** The _session. */
 	private ThreadLocal<Client> _session = new ThreadLocal<Client>();
 
+	/** The started. */
+	public static boolean started = false;
+
+	/**
+	 * Client.
+	 * 
+	 * @return the client
+	 */
 	public Client client() {
 		return _session.get();
 	}
 
+	/**
+	 * Elastic Search Start.
+	 * 
+	 * @see play.PlayPlugin#onApplicationStart()
+	 */
 	@Override
 	public void onApplicationStart() {
+		// Make sure it doesn't get started more than once
+		if (_session.get() != null || started) {
+			Logger.info("Elastic Search Started Already!");
+			return;
+		}
+
+		// Start Node Builder
 		NodeBuilder nb = nodeBuilder();
 
+		// Check Local Mode
 		boolean localMode = false;
 		if (!Play.configuration.containsKey("elasticsearch.local")) {
 			localMode = Boolean.getBoolean(Play.configuration
@@ -31,6 +58,7 @@ public class ElasticSearchPlugin extends PlayPlugin {
 			nb = nb.local(localMode);
 		}
 
+		// Check Client Mode
 		boolean clientMode = false;
 		if (!Play.configuration.containsKey("elasticsearch.client")) {
 			clientMode = Boolean.getBoolean(Play.configuration
@@ -38,59 +66,41 @@ public class ElasticSearchPlugin extends PlayPlugin {
 			nb = nb.client(clientMode);
 		}
 
+		// Default to Local Mode
 		if (localMode == false && clientMode == false) {
 			localMode = true;
 			nb = nb.local(localMode);
 		}
 
+		// Log Debug
 		if (localMode) {
 			Logger.info("Starting Play! Elastic Search in Local Mode");
 		} else {
 			Logger.info("Starting Play! Elastic Search in Client Mode");
 		}
 
+		// Mark as Started
+		started = true;
 		Node node = nb.node();
 		Client client = node.client();
 
-		_session.set(client);
-
-	}
-
-	@Override
-	public void onEvent(String message, Object context) {
-		ElasticSearchPlugin plugin = Play.plugin(ElasticSearchPlugin.class);
-		Client client = plugin.client();
-
+		// Start Indexes
 		try {
-
-			ElasticSearchEntity clazz = context.getClass().getAnnotation(
-					ElasticSearchEntity.class);
-			if (clazz == null) {
-				// Logger.info("No ElasticSearchEntity Found - Message: %s, Object: %s, Class: class",
-				// message, context, context.getClass().getName());
-				return;
-			} else {
-				Logger.info(
-						"@ElasticSearchEntity - Message: %s, Object: %s, Class: class",
-						message, context, context.getClass().getName());
-			}
-
-			if (!message.startsWith("JPASupport"))
-				return;
-
-			if (message.equals("JPASupport.objectPersisted")
-					|| message.equals("JPASupport.objectUpdated")) {
-				ElasticSearchAdapter.indexModel(this.client(), context
-						.getClass().getName(), (Model) context);
-
-			} else if (message.equals("JPASupport.objectDeleted")) {
-				ElasticSearchAdapter.deleteModel(this.client(), context
-						.getClass().getName(), (Model) context);
+			// Start Indexes
+			String models = Play.configuration.getProperty("elasticsearch.models", "");
+			String[] classes = StringUtils.split(models, ",");
+			for ( String clazz : classes ) {
+				Logger.info("Start Index for Class: %s", clazz);
+				ElasticSearchAdapter.startIndex(client, Class.forName(clazz));
 			}
 
 		} catch (Throwable t) {
+			Logger.warn(ExceptionUtil.getStackTrace(t));
 			throw new RuntimeException(t);
 		}
+
+		// Bind Client to Thread Local
+		_session.set(client);
 
 	}
 
