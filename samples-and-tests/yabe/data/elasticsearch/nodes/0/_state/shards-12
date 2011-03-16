@@ -1,0 +1,26 @@
+{
+  "state" : {
+    "version" : 12,
+    "shards" : [ {
+      "index" : "test",
+      "id" : 0,
+      "version" : 12
+    }, {
+      "index" : "test",
+      "id" : 1,
+      "version" : 12
+    }, {
+      "index" : "test",
+      "id" : 4,
+      "version" : 12
+    }, {
+      "index" : "test",
+      "id" : 3,
+      "version" : 12
+    }, {
+      "index" : "test",
+      "id" : 2,
+      "version" : 12
+    } ]
+  }
+}
