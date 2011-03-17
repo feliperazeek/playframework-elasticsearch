@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
+import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.Client;
@@ -62,10 +63,13 @@ public abstract class ElasticSearchAdapter {
 	private static void index(Client client, String indexName) {
 		try {
 			Logger.info("Starting Elastic Search Index %s", indexName);
-			client.admin().indices().create(new CreateIndexRequest(indexName))
+			CreateIndexResponse response = client.admin().indices().create(new CreateIndexRequest(indexName))
 					.actionGet();
+			Logger.info("Response: %s", response);
+			
 		} catch (IndexAlreadyExistsException iaee) {
 			Logger.info("Index already exists: %s", indexName);
+		
 		} catch (Throwable t) {
 			Logger.warn(ExceptionUtil.getStackTrace(t));
 		}
@@ -88,13 +92,18 @@ public abstract class ElasticSearchAdapter {
 		// Log Debug
 		Logger.info("Start Index Model: %s", model);
 		
+		// Init Builder
+		XContentBuilder contentBuilder  = null;
+		
+		try {
+		
 		// Define Index Name
 		String indexName = getIndexName( model );
 		Logger.info("Index Name: %s", indexName);
 
 		// Start Mapping Object
 		IndexRequestBuilder irb = client.prepareIndex(indexName, indexName, String.valueOf(model._key()));
-		XContentBuilder b = XContentFactory.jsonBuilder().startObject();
+		contentBuilder = XContentFactory.smileBuilder();
 
 		// Get list fields that should not be ignored (@ElasticSearchIgnore)
 		List<String> fields = ReflectionUtil.getAllFieldNamesWithoutAnnotation(
@@ -110,27 +119,33 @@ public abstract class ElasticSearchAdapter {
 					Object value = ReflectionUtil.getFieldValue(model, name);
 					if (value != null) {
 						Logger.info("Field: " + name + ", Value: " + value);
-						b.field(name, value);
+						contentBuilder.field(name, value);
 					} else {
 						Logger.info("No Value for Field: " + name);
 					}
 				} else {
-					b.field(name, model._key());
+					contentBuilder.field(name, model._key());
 				}
 			}
 		}
 		
 		// Done Mapping
-		b.endObject();
+		contentBuilder.endObject();
 		
 		// Set Builder
-		irb.setSource(b);
+		irb.setSource(contentBuilder);
 
 		// Send Job
 		IndexResponse response = irb.execute().actionGet();;
 
 		// Log Debug
 		Logger.info("Index Response: %s", response);
+		
+		} finally {
+			if ( contentBuilder != null ) {
+				contentBuilder.close();
+			}
+		}
 	}
 
 	/**

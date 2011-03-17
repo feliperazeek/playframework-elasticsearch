@@ -5,7 +5,7 @@
 	<classpathentry kind="src" path="test"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="/Users/felipera/Downloads/play-1.1/framework/play.jar" sourcepath="/Users/felipera/Downloads/play-1.1/framework"/>
-	<classpathentry kind="lib" path="/Users/felipera/development/elasticsearch/lib/elasticsearch-0.15.2.jar"/>
+	<classpathentry kind="lib" path="/Users/felipera/development/elasticsearch/lib/elasticsearch-0.15.2.jar" sourcepath="/Users/felipera/tmp/elasticsearch/modules/elasticsearch"/>
 	<classpathentry kind="lib" path="/Users/felipera/development/elasticsearch/lib/jline-0.9.94.jar"/>
 	<classpathentry kind="lib" path="/Users/felipera/development/elasticsearch/lib/jna-3.2.7.jar"/>
 	<classpathentry kind="lib" path="/Users/felipera/development/elasticsearch/lib/log4j-1.2.15.jar"/>
