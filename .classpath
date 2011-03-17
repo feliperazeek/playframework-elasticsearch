@@ -19,7 +19,6 @@
 	<classpathentry kind="lib" path="/Users/felipera/development/elasticsearch/lib/play-elasticsearch.jar"/>
 	<classpathentry kind="lib" path="/Users/felipera/Downloads/play-1.1/framework/lib/activation-1.1.1.jar"/>
 	<classpathentry kind="lib" path="/Users/felipera/Downloads/play-1.1/framework/lib/antlr-2.7.6.jar"/>
-	<classpathentry kind="lib" path="/Users/felipera/Downloads/play-1.1/framework/lib/async-http-client-1.2.0.jar"/>
 	<classpathentry kind="lib" path="/Users/felipera/Downloads/play-1.1/framework/lib/bcprov-jdk15-145.jar"/>
 	<classpathentry kind="lib" path="/Users/felipera/Downloads/play-1.1/framework/lib/c3p0-0.9.1.2.jar"/>
 	<classpathentry kind="lib" path="/Users/felipera/Downloads/play-1.1/framework/lib/cglib-2.2.jar"/>

@@ -2,16 +2,17 @@ package play.modules.elasticsearch;
 
 import static org.elasticsearch.node.NodeBuilder.nodeBuilder;
 
-import java.util.Set;
-
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.common.settings.ImmutableSettings;
+import org.elasticsearch.common.settings.ImmutableSettings.Builder;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 
 import play.Logger;
 import play.Play;
 import play.PlayPlugin;
+import play.mvc.Router;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -48,7 +49,9 @@ public class ElasticSearchPlugin extends PlayPlugin {
 		}
 
 		// Start Node Builder
-		NodeBuilder nb = nodeBuilder();
+		Builder settings = ImmutableSettings.settingsBuilder();
+		settings.build();
+		NodeBuilder nb = nodeBuilder().settings(settings);
 
 		// Check Local Mode
 		boolean localMode = false;
@@ -91,13 +94,17 @@ public class ElasticSearchPlugin extends PlayPlugin {
 			String[] classes = StringUtils.split(models, ",");
 			for ( String clazz : classes ) {
 				Logger.info("Start Index for Class: %s", clazz);
-				ElasticSearchAdapter.startIndex(client, Class.forName(clazz));
+				ElasticSearchAdapter.startIndex(client, clazz);
 			}
 
 		} catch (Throwable t) {
 			Logger.warn(ExceptionUtil.getStackTrace(t));
 			throw new RuntimeException(t);
 		}
+		
+		// Bind Admin
+		Router.addRoute("GET", "/es-admin/", "ElasticSearchAdmin.index");
+		Router.addRoute("GET", "/es-admin/lib", "staticDir:public");
 
 		// Bind Client to Thread Local
 		_session.set(client);

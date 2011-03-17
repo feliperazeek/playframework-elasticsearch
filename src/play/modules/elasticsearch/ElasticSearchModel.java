@@ -33,6 +33,7 @@ public class ElasticSearchModel<T extends ElasticSearchModel> extends Model {
 			Logger.info("Elastic Event Done!");
 
 		} catch (Throwable t) {
+			Logger.error(ExceptionUtil.getStackTrace(t));
 			throw new RuntimeException(t);
 		}
 	}

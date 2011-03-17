@@ -6,10 +6,12 @@ import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
-import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.client.action.index.IndexRequestBuilder;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
+import org.elasticsearch.indices.IndexAlreadyExistsException;
 
 import play.Logger;
 import play.db.Model;
@@ -38,11 +40,32 @@ public abstract class ElasticSearchAdapter {
 	 *            the clazz
 	 */
 	public static void startIndex(Client client, Class<?> clazz) {
+		index( client, getIndexName( clazz ) );
+	}
+	
+	/**
+	 * Start index.
+	 *
+	 * @param client the client
+	 * @param clazz the clazz
+	 */
+	public static void startIndex(Client client, String clazz) {
+		index( client, getIndexName( clazz ) );
+	}
+	
+	/**
+	 * Index.
+	 *
+	 * @param client the client
+	 * @param indexName the index name
+	 */
+	private static void index(Client client, String indexName) {
 		try {
-			String indexName = getIndexName(clazz);
-			Logger.info("Starting index %s for class %s", indexName, clazz);
+			Logger.info("Starting Elastic Search Index %s", indexName);
 			client.admin().indices().create(new CreateIndexRequest(indexName))
 					.actionGet();
+		} catch (IndexAlreadyExistsException iaee) {
+			Logger.info("Index already exists: %s", indexName);
 		} catch (Throwable t) {
 			Logger.warn(ExceptionUtil.getStackTrace(t));
 		}
@@ -64,8 +87,13 @@ public abstract class ElasticSearchAdapter {
 			throws Exception {
 		// Log Debug
 		Logger.info("Start Index Model: %s", model);
+		
+		// Define Index Name
+		String indexName = getIndexName( model );
+		Logger.info("Index Name: %s", indexName);
 
 		// Start Mapping Object
+		IndexRequestBuilder irb = client.prepareIndex(indexName, indexName, String.valueOf(model._key()));
 		XContentBuilder b = XContentFactory.jsonBuilder().startObject();
 
 		// Get list fields that should not be ignored (@ElasticSearchIgnore)
@@ -91,14 +119,15 @@ public abstract class ElasticSearchAdapter {
 				}
 			}
 		}
-
+		
 		// Done Mapping
 		b.endObject();
+		
+		// Set Builder
+		irb.setSource(b);
 
 		// Send Job
-		GetResponse response = client
-				.prepareGet(getIndexName(model), getIndexName(model),
-						String.valueOf(model._key())).execute().actionGet();
+		IndexResponse response = irb.execute().actionGet();;
 
 		// Log Debug
 		Logger.info("Index Response: %s", response);
@@ -139,6 +168,16 @@ public abstract class ElasticSearchAdapter {
 	private static String getIndexName(Model model) {
 		return getIndexName(model.getClass());
 	}
+	
+	/**
+	 * Gets the index name.
+	 *
+	 * @param clazz the clazz
+	 * @return the index name
+	 */
+	private static String getIndexName(Class<?> clazz) {
+		return getIndexName(clazz.getName());
+	}
 
 	/**
 	 * Gets the index name.
@@ -147,11 +186,10 @@ public abstract class ElasticSearchAdapter {
 	 *            the clazz
 	 * @return the index name
 	 */
-	private static String getIndexName(Class<?> clazz) {
-		Logger.info("Class: %s", clazz);
-		String value = clazz.getName().toLowerCase().trim().replace('.', '_');
-		value = value.substring(1);
-		value = value.substring(0, value.length() -2);
+	private static String getIndexName(String clazz) {
+		Logger.debug("Class: %s", clazz);
+		String value = clazz.toLowerCase().trim().replace('.', '_');
+		Logger.debug("Index Name: %s", value);
 		return value;
 	}
 
