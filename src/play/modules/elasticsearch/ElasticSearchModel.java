@@ -27,10 +27,10 @@ public class ElasticSearchModel<T extends ElasticSearchModel> extends Model {
 	@PostPersist
 	public void postPersist() {
 		try {
-			Logger.info("Elastic Event Start - Object: " + this + ", Key: " + id);
+			Logger.info("Elastic Search - Index Request: " + this + ", Key: " + id);
 			ElasticSearchPlugin plugin = Play.plugin(ElasticSearchPlugin.class);
 			ElasticSearchAdapter.indexModel(plugin.client(), (T) this);
-			Logger.info("Elastic Event Done!");
+			Logger.debug("Elastic Event Done!");
 
 		} catch (Throwable t) {
 			Logger.error(ExceptionUtil.getStackTrace(t));
@@ -44,11 +44,10 @@ public class ElasticSearchModel<T extends ElasticSearchModel> extends Model {
 	@PostRemove
 	public void postRemove() {
 		try {
-			Logger.info("Elastic Delete Event Start - Object: " + this
-					+ ", Key: " + id);
+			Logger.info("Elastic Search - Remove Request: " + this + ", Key: " + id);
 			ElasticSearchPlugin plugin = Play.plugin(ElasticSearchPlugin.class);
 			ElasticSearchAdapter.deleteModel(plugin.client(), (T) this);
-			Logger.info("Elastic Delete Event Done!");
+			Logger.debug("Elastic Delete Event Done!");
 
 		} catch (Throwable t) {
 			throw new RuntimeException(t);

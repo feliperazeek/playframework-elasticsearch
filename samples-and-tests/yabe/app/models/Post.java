@@ -17,7 +17,6 @@ import play.data.validation.MaxSize;
 import play.modules.elasticsearch.*;
 
 @Entity
-@ElasticSearchable
 public class Post extends ElasticSearchModel<Post> {
  
     public String title;

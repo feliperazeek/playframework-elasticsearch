@@ -44,7 +44,7 @@ public class ElasticSearchPlugin extends PlayPlugin {
 	public void onApplicationStart() {
 		// Make sure it doesn't get started more than once
 		if (_session.get() != null || started) {
-			Logger.info("Elastic Search Started Already!");
+			Logger.debug("Elastic Search Started Already!");
 			return;
 		}
 
@@ -77,9 +77,9 @@ public class ElasticSearchPlugin extends PlayPlugin {
 
 		// Log Debug
 		if (localMode) {
-			Logger.info("Starting Play! Elastic Search in Local Mode");
+			Logger.info("Starting Elastic Search for Play! in Local Mode");
 		} else {
-			Logger.info("Starting Play! Elastic Search in Client Mode");
+			Logger.info("Connecting Play! to Elastic Search in Client Mode");
 		}
 
 		// Mark as Started

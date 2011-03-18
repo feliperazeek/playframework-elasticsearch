@@ -30,6 +30,7 @@ public abstract class ElasticSearchAdapter {
 		IGNORE_FIELDS.add("avoidCascadeSaveLoops");
 		IGNORE_FIELDS.add("willBeSaved");
 		IGNORE_FIELDS.add("serialVersionId");
+		IGNORE_FIELDS.add("serialVersionUID");
 	}
 
 	/**
@@ -41,35 +42,38 @@ public abstract class ElasticSearchAdapter {
 	 *            the clazz
 	 */
 	public static void startIndex(Client client, Class<?> clazz) {
-		index( client, getIndexName( clazz ) );
+		index(client, getIndexName(clazz));
 	}
-	
+
 	/**
 	 * Start index.
-	 *
-	 * @param client the client
-	 * @param clazz the clazz
+	 * 
+	 * @param client
+	 *            the client
+	 * @param clazz
+	 *            the clazz
 	 */
 	public static void startIndex(Client client, String clazz) {
-		index( client, getIndexName( clazz ) );
+		index(client, getIndexName(clazz));
 	}
-	
+
 	/**
 	 * Index.
-	 *
-	 * @param client the client
-	 * @param indexName the index name
+	 * 
+	 * @param client
+	 *            the client
+	 * @param indexName
+	 *            the index name
 	 */
 	private static void index(Client client, String indexName) {
 		try {
-			Logger.info("Starting Elastic Search Index %s", indexName);
-			CreateIndexResponse response = client.admin().indices().create(new CreateIndexRequest(indexName))
-					.actionGet();
-			Logger.info("Response: %s", response);
-			
+			Logger.debug("Starting Elastic Search Index %s", indexName);
+			CreateIndexResponse response = client.admin().indices().create(new CreateIndexRequest(indexName)).actionGet();
+			Logger.debug("Response: %s", response);
+
 		} catch (IndexAlreadyExistsException iaee) {
-			Logger.info("Index already exists: %s", indexName);
-		
+			Logger.debug("Index already exists: %s", indexName);
+
 		} catch (Throwable t) {
 			Logger.warn(ExceptionUtil.getStackTrace(t));
 		}
@@ -87,62 +91,48 @@ public abstract class ElasticSearchAdapter {
 	 * @throws Exception
 	 *             the exception
 	 */
-	public static <T extends Model> void indexModel(Client client, T model)
-			throws Exception {
+	public static <T extends Model> void indexModel(Client client, T model) throws Exception {
 		// Log Debug
-		Logger.info("Start Index Model: %s", model);
-		
-		// Init Builder
-		XContentBuilder contentBuilder  = null;
-		
+		Logger.debug("Start Index Model: %s", model);
+
+		// Define Content Builder
+		XContentBuilder contentBuilder = null;
+
+		// Index Model
 		try {
-		
-		// Define Index Name
-		String indexName = getIndexName( model );
-		Logger.info("Index Name: %s", indexName);
+			// Define Index Name
+			String indexName = getIndexName(model);
+			Logger.debug("Index Name: %s", indexName);
 
-		// Start Mapping Object
-		IndexRequestBuilder irb = client.prepareIndex(indexName, indexName, String.valueOf(model._key()));
-		contentBuilder = XContentFactory.smileBuilder();
+			// Get list fields that should not be ignored (@ElasticSearchIgnore)
+			List<String> fields = ReflectionUtil.getAllFieldNamesWithoutAnnotation(model.getClass(), ElasticSearchIgnore.class);
+			contentBuilder = XContentFactory.jsonBuilder().startObject();
 
-		// Get list fields that should not be ignored (@ElasticSearchIgnore)
-		List<String> fields = ReflectionUtil.getAllFieldNamesWithoutAnnotation(
-				model.getClass(), ElasticSearchIgnore.class);
-
-		// Loop into each field
-		for (String name : fields) {
-			if (StringUtils.isNotBlank(name)
-					&& IGNORE_FIELDS.contains(name) == false) {
-				if (name.equalsIgnoreCase("id")) {
-					name = name.replaceFirst(model.getClass()
-							.getCanonicalName() + ".", "");
-					Object value = ReflectionUtil.getFieldValue(model, name);
-					if (value != null) {
-						Logger.info("Field: " + name + ", Value: " + value);
-						contentBuilder.field(name, value);
+			// Loop into each field
+			for (String name : fields) {
+				name = name.replaceFirst(model.getClass().getCanonicalName() + ".", "");
+				if (StringUtils.isNotBlank(name) && IGNORE_FIELDS.contains(name) == false) {
+					if (name.equalsIgnoreCase("id") == false) {
+						Object value = ReflectionUtil.getFieldValue(model, name);
+						if (value != null) {
+							Logger.debug("Field: " + name + ", Value: " + value);
+							contentBuilder = contentBuilder.field(name, value);
+						} else {
+							Logger.debug("No Value for Field: " + name);
+						}
 					} else {
-						Logger.info("No Value for Field: " + name);
+						contentBuilder = contentBuilder.field(name, model._key());
 					}
-				} else {
-					contentBuilder.field(name, model._key());
 				}
 			}
-		}
-		
-		// Done Mapping
-		contentBuilder.endObject();
-		
-		// Set Builder
-		irb.setSource(contentBuilder);
+			contentBuilder = contentBuilder.endObject().prettyPrint();
+			IndexResponse response = client.prepareIndex(indexName, indexName, model._key().toString()).setSource(contentBuilder).execute().actionGet();
 
-		// Send Job
-		IndexResponse response = irb.execute().actionGet();;
+			// Log Debug
+			Logger.info("Index Response: %s", response);
 
-		// Log Debug
-		Logger.info("Index Response: %s", response);
-		
 		} finally {
-			if ( contentBuilder != null ) {
+			if (contentBuilder != null) {
 				contentBuilder.close();
 			}
 		}
@@ -160,16 +150,10 @@ public abstract class ElasticSearchAdapter {
 	 * @throws Exception
 	 *             the exception
 	 */
-	public static <T extends Model> void deleteModel(Client client, T model)
-			throws Exception {
-		Logger.info("Delete Model: %s", model);
-
-		DeleteResponse response = client
-				.prepareDelete(getIndexName(model), getIndexName(model),
-						String.valueOf(model._key()))
-				.setOperationThreaded(false).execute().actionGet();
-
-		Logger.info("Delete Response: %s", response);
+	public static <T extends Model> void deleteModel(Client client, T model) throws Exception {
+		Logger.debug("Delete Model: %s", model);
+		DeleteResponse response = client.prepareDelete(getIndexName(model), getIndexName(model), String.valueOf(model._key())).setOperationThreaded(false).execute().actionGet();
+		Logger.debug("Delete Response: %s", response);
 
 	}
 
@@ -183,11 +167,12 @@ public abstract class ElasticSearchAdapter {
 	private static String getIndexName(Model model) {
 		return getIndexName(model.getClass());
 	}
-	
+
 	/**
 	 * Gets the index name.
-	 *
-	 * @param clazz the clazz
+	 * 
+	 * @param clazz
+	 *            the clazz
 	 * @return the index name
 	 */
 	private static String getIndexName(Class<?> clazz) {
