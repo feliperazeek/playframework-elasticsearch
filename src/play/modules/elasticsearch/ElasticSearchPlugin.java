@@ -2,6 +2,8 @@ package play.modules.elasticsearch;
 
 import static org.elasticsearch.node.NodeBuilder.nodeBuilder;
 
+import java.lang.annotation.Annotation;
+
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.ImmutableSettings;
@@ -12,6 +14,7 @@ import org.elasticsearch.node.NodeBuilder;
 import play.Logger;
 import play.Play;
 import play.PlayPlugin;
+import play.db.jpa.Model;
 import play.mvc.Router;
 
 // TODO: Auto-generated Javadoc
@@ -109,6 +112,54 @@ public class ElasticSearchPlugin extends PlayPlugin {
 		// Bind Client to Thread Local
 		_session.set(client);
 
+	}
+	
+	private boolean isElasticSearchable(Object o) {
+		for ( Annotation a : o.getClass().getAnnotations() ) {
+			if ( ElasticSearchable.class.equals(a.getClass()) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	@Override
+	public void onEvent(String message, Object context) {
+		// Just accept JPA events
+		if (!StringUtils.startsWith(message, "JPASupport.")) {
+			return;
+		}
+		
+		// Check if object has annotation
+		if ( this.isElasticSearchable(context) == false ) {
+			Logger.debug("Not marked to be elastic searchable!");
+			return;
+		}
+
+		// Do Work
+		try {
+			// Get Plugin
+			ElasticSearchPlugin plugin = Play.plugin(ElasticSearchPlugin.class);
+			
+			// Log Debug
+			Logger.info("Elastic Search - " + message + " Event for: " + context);
+			
+			// Check Event Type
+			if (message.equals("JPASupport.objectPersisted") || message.equals("JPASupport.objectUpdated")) {
+				// Index Model
+				ElasticSearchAdapter.indexModel(plugin.client(), (Model)context);
+				
+			} else if (message.equals("JPASupport.objectDeleted")) {
+				// Delete Model fromIndex
+				ElasticSearchAdapter.deleteModel(plugin.client(), (Model)context);
+			}
+			
+			// Log Debug
+			Logger.debug("Elastic Event Done!");
+		
+		} catch (Exception e) {
+			Logger.error(e, "Problem updating entity %s on event %s with error %s", context, message, e.getMessage());
+		}
 	}
 
 }

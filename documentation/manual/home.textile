@@ -49,7 +49,7 @@ All of the properties are required.
 
 ## Usage
 
-You basically need to extend ElasticSearchModel instead of Model on your as you can guess model class. It only works for JPA so far. 
+You basically need to add annotation "@ElasticSearchable" to your Model class. It only works for JPA so far. 
 
 
 
