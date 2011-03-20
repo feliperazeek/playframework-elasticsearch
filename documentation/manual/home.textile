@@ -50,6 +50,7 @@ You basically need to add annotation "@ElasticSearchable" to your Model class. I
 
 Example:
 `
+				@ElasticSearchable
 				@Entity
 				public class Post extends Model {
 				 

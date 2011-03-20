@@ -3,6 +3,7 @@ package play.modules.elasticsearch;
 import static org.elasticsearch.node.NodeBuilder.nodeBuilder;
 
 import java.lang.annotation.Annotation;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -112,10 +113,16 @@ public class ElasticSearchPlugin extends PlayPlugin {
 	 * @return true, if is elastic searchable
 	 */
 	private boolean isElasticSearchable(Object o) {
-		for (Annotation a : o.getClass().getAnnotations()) {
-			if (ElasticSearchable.class.equals(a.getClass())) {
-				return true;
+		Class<?> clazz = o.getClass();
+		while (clazz != null) {
+			//Logger.info("Class: %s", clazz);
+			for (Annotation a : clazz.getAnnotations()) {
+				//Logger.info("Class: %s - Annotation: %s", clazz, a.toString());
+				if ( a.toString().indexOf("ElasticSearchable") > -1 ) {
+					return true;
+				}
 			}
+			clazz = clazz.getSuperclass();
 		}
 		return false;
 	}
@@ -135,7 +142,9 @@ public class ElasticSearchPlugin extends PlayPlugin {
 		}
 
 		// Check if object has annotation
-		if (this.isElasticSearchable(context) == false) {
+		boolean isSearchable = this.isElasticSearchable(context);
+		//Logger.info("Searchable: %s", isSearchable);
+		if (isSearchable == false) {
 			//Logger.debug("Not marked to be elastic searchable!");
 			return;
 		}
