@@ -14,10 +14,12 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
 import play.data.validation.MaxSize;
-import play.modules.elasticsearch.*;
+import play.db.jpa.Model;
+import play.modules.elasticsearch.ElasticSearchable;
 
+@ElasticSearchable
 @Entity
-public class Post extends ElasticSearchModel<Post> {
+public class Post extends Model {
  
     public String title;
     
