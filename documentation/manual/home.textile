@@ -63,6 +63,26 @@ Example:
 `
 
 
+
+## Searching
+
+`
+				import static org.elasticsearch.index.query.xcontent.FilterBuilders.*;
+				import static org.elasticsearch.index.query.xcontent.QueryBuilders.*;
+				
+				org.elasticsearch.client.Client client = ElasticSearch.client();
+				SearchResponse response = client.prepareSearch("test")
+				        .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
+				        .setQuery(termQuery("multi", "test"))
+				        .setFrom(0).setSize(60).setExplain(true))
+				        .execute()
+				        .actionGet();
+`
+See Elastic Search for more information.
+
+
+
+
 ## User Interface 
 
 After you start your application (play run), you should have an admin interface automatically running on http://localhost:9000/es-admin/.
