@@ -64,13 +64,13 @@ Example:
 
 ## User Interface 
 
-After you start your application (play run), you should have an admin interface automatically running on http://localhost:9002/es-admin/.
+After you start your application (play run), you should have an admin interface automatically running on http://localhost:9000/es-admin/.
 
 
 
 ## Source Code
 
-Fork it on Github https://github.com/feliperazeek/playframework-linkedin.
+Fork it on Github https://github.com/feliperazeek/playframework-elasticsearch.
 
 
 ## Roadmap
