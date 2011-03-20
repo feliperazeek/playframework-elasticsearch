@@ -3,14 +3,15 @@ package play.modules.elasticsearch;
 import static org.elasticsearch.node.NodeBuilder.nodeBuilder;
 
 import java.lang.annotation.Annotation;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.ImmutableSettings.Builder;
+import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 
@@ -43,6 +44,15 @@ public class ElasticSearchPlugin extends PlayPlugin {
 	public Client client() {
 		return _session.get();
 	}
+	
+	/**
+	 * Checks if is local mode.
+	 *
+	 * @return true, if is local mode
+	 */
+	private boolean isLocalMode() {
+		return Boolean.getBoolean(Play.configuration.getProperty("elasticsearch.local").trim());
+	}
 
 	/**
 	 * Elastic Search Start.
@@ -62,48 +72,53 @@ public class ElasticSearchPlugin extends PlayPlugin {
 
 		// Start Node Builder
 		Builder settings = ImmutableSettings.settingsBuilder();
+		settings.put("client.transport.sniff", true);
 		settings.build();
-		NodeBuilder nb = nodeBuilder().settings(settings);
-
-		// Check Local Mode
-		boolean localMode = false;
-		if (!Play.configuration.containsKey("elasticsearch.local")) {
-			localMode = Boolean.getBoolean(Play.configuration.getProperty("elasticsearch.local"));
-			nb = nb.local(localMode);
-		}
-
-		// Check Client Mode
-		boolean clientMode = false;
-		if (!Play.configuration.containsKey("elasticsearch.client")) {
-			clientMode = Boolean.getBoolean(Play.configuration.getProperty("elasticsearch.client"));
-			nb = nb.client(clientMode);
-		}
-
-		// Default to Local Mode
-		if (localMode == false && clientMode == false) {
-			localMode = true;
-			nb = nb.local(localMode);
-		}
-
-		// Log Debug
-		if (localMode) {
+		
+		// Define Client
+		Client client = null;
+		
+		// Check Model
+		if ( this.isLocalMode() ) {
 			Logger.info("Starting Elastic Search for Play! in Local Mode");
+			NodeBuilder nb = nodeBuilder().settings(settings).local(true).client(false).data(true);
+			Node node = nb.node();
+			client = node.client();
+			
 		} else {
 			Logger.info("Connecting Play! to Elastic Search in Client Mode");
+			TransportClient c = new TransportClient(settings);
+			if ( Play.configuration.getProperty("elasticsearch.client") == null ) {
+				throw new RuntimeException("Configuration required - elasticsearch.client when local model is disabled!");
+			}
+			String[] hosts = Play.configuration.getProperty("elasticsearch.client").trim().split(",");
+			boolean done = false;
+			for ( String host : hosts ) {
+				String[] parts = host.split(":");
+				if ( parts.length != 2 ) {
+					throw new RuntimeException("Invalid Host: " + host);
+				}
+				Logger.info("Transport Client - Host: %s Port: %s", parts[0], parts[1]);
+				c.addTransportAddress(new InetSocketTransportAddress(parts[0], Integer.valueOf(parts[1])));
+				done = true;
+			}
+			if ( done == false ) {
+				throw new RuntimeException("No Hosts Provided for Elastic Search!");
+			}
+			client = c;
 		}
-
-		// Mark as Started
-		started = true;
-		Node node = nb.node();
-		Client client = node.client();
 
 		// Bind Admin
 		Router.addRoute("GET", "/es-admin/", "ElasticSearchAdmin.index");
 		Router.addRoute("GET", "/es-admin/lib", "staticDir:public");
+		
+		// Check Client
+		if ( client == null ) {
+			throw new RuntimeException("Elastic Search Client cannot be null - please check the configuration provided and the health of your Elastic Search instances.");
+		}
 
 		// Bind Client to Thread Local
 		_session.set(client);
-
 	}
 
 	/**
@@ -128,7 +143,10 @@ public class ElasticSearchPlugin extends PlayPlugin {
 	}
 
 	/**
-	 * Handle Event
+	 * Handle Event.
+	 *
+	 * @param message the message
+	 * @param context the context
 	 * @see play.PlayPlugin#onEvent(java.lang.String, java.lang.Object)
 	 */
 	@Override
