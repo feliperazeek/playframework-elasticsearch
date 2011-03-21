@@ -26,23 +26,20 @@ Install the elasticsearch module from the modules repository:
 After installing the module, add the following to your application.conf to enable it:
 
 `
-module.elasticsearch=${play.path}/modules/elasticsearch-0.0.2
+module.elasticsearch=${play.path}/modules/elasticsearch-0.0.3
 `
 
 
 ### Configure the module
 
-You need to configure the module by setting these properties in your application.conf:
+You need to configure the module by setting these properties in your application.conf. There are two ways to run your Play! app with Elastic Search, local mode or client mode. Local mode works well for development purposes, an Elastic Search instance will run on the same JVM as your Play! application automatically. You won't need to setup another service, etc. The second option is client mode which fits better in a production environment. The default option is local mode.
 
-				# Elastic Search
+				# Option 1) Elastic Search (Local Model)
 				elasticsearch.local=true
-				elasticsearch.client=false
 
-Local Model is the only supported at this point which embeds an Elastic Search instance with Play!. Elastic Search runs on port 9002. 
-
-All of the properties are required.
-
-
+				# Option 2) Elastic Search (Client Model)
+				elasticsearch.local=false
+				elasticsearch.client=mynode1:9002,mynode2:9002
 
 ## Usage
 
@@ -63,6 +60,26 @@ Example:
 `
 
 
+
+## Searching
+
+`
+				import static org.elasticsearch.index.query.xcontent.FilterBuilders.*;
+				import static org.elasticsearch.index.query.xcontent.QueryBuilders.*;
+				
+				org.elasticsearch.client.Client client = ElasticSearch.client();
+				SearchResponse response = client.prepareSearch("test")
+				        .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
+				        .setQuery(termQuery("multi", "test"))
+				        .setFrom(0).setSize(60).setExplain(true))
+				        .execute()
+				        .actionGet();
+`
+See Elastic Search for more information.
+
+
+
+
 ## User Interface 
 
 After you start your application (play run), you should have an admin interface automatically running on http://localhost:9000/es-admin/.
@@ -76,9 +93,11 @@ Fork it on Github https://github.com/feliperazeek/playframework-elasticsearch.
 
 ## Roadmap
 
--> Add support to external instances using TransportClient.
+-> Add support to external instances using TransportClient. (DONE!)
 -> Add different methods of notification (ElasticSearch River, AMQP, JMS)
 -> Adding support for non-Jpa models. 
+-> Parent/Child support
+-> Customizations for mapping, etc
 
 
 
