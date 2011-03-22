@@ -18,7 +18,7 @@ h2. Install the module
 
 Install the elasticsearch module from the modules repository:
 
-@play install elasticsearch @
+@play install elasticsearch@
 
 
 h2. Enable the module
@@ -45,7 +45,7 @@ h2. Usage
 You basically need to add annotation "@ElasticSearchable" to your Model class. It only works for JPA so far. 
 
 Example:
-@
+
 				@ElasticSearchable
 				@Entity
 				public class Post extends Model {
@@ -56,12 +56,10 @@ Example:
 				    public Date postedAt;
 				    
 				}
-@
 
 
 h2. Searching
 
-@
 				import static org.elasticsearch.index.query.xcontent.FilterBuilders.*;
 				import static org.elasticsearch.index.query.xcontent.QueryBuilders.*;
 				
@@ -72,7 +70,7 @@ h2. Searching
 				        .setFrom(0).setSize(60).setExplain(true))
 				        .execute()
 				        .actionGet();
-@
+				        
 See Elastic Search for more information.
 
 
@@ -91,7 +89,6 @@ Fork it on Github "https://github.com/feliperazeek/playframework-elasticsearch(h
 
 h2. Roadmap
 
-* Add support to external instances using TransportClient. (DONE!)
 * Add different methods of notification (ElasticSearch River, AMQP, JMS)
 * Adding support for non-Jpa models. 
 * Parent/Child support
