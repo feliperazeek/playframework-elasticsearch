@@ -112,16 +112,12 @@ public abstract class ElasticSearchAdapter {
 			for (String name : fields) {
 				name = name.replaceFirst(model.getClass().getCanonicalName() + ".", "");
 				if (StringUtils.isNotBlank(name) && IGNORE_FIELDS.contains(name) == false) {
-					if (name.equalsIgnoreCase("id") == false) {
-						Object value = ReflectionUtil.getFieldValue(model, name);
-						if (value != null) {
-							Logger.debug("Field: " + name + ", Value: " + value);
-							contentBuilder = contentBuilder.field(name, value);
-						} else {
-							Logger.debug("No Value for Field: " + name);
-						}
+					Object value = ReflectionUtil.getFieldValue(model, name);
+					if (value != null) {
+						Logger.debug("Field: " + name + ", Value: " + value);
+						contentBuilder = contentBuilder.field(name, value);
 					} else {
-						contentBuilder = contentBuilder.field(name, model._key());
+						Logger.debug("No Value for Field: " + name);
 					}
 				}
 			}

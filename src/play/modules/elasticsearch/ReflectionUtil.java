@@ -89,24 +89,30 @@ public abstract class ReflectionUtil {
 	}
 
 	/**
-	 * Sets the field.
-	 * 
-	 * @param object
-	 *            the object
-	 * @param fieldName
-	 *            the field name
-	 * @return the field param
+	 * Gets the field value.
+	 *
+	 * @param object the object
+	 * @param fieldName the field name
+	 * @return the field value
 	 */
 	public static Object getFieldValue(Object object, String fieldName) {
-		try {
-			Field field = object.getClass().getDeclaredField(fieldName);
-			field.setAccessible(true);
-			return field.get(object);
-		} catch (Exception e) {
-			Logger.warn(ExceptionUtil.getStackTrace(e));
-			// throw new RuntimeException( e );
-		}
-		return null;
+	    try {
+	        Class<?> clazz = object.getClass();
+
+	        // Get all the fields including superclasses
+	        while (clazz != null) {
+	            for(Field field: clazz.getDeclaredFields())
+	                if (field.getName().equals(fieldName)) {
+	                    field.setAccessible(true);
+	                    return field.get(object);
+	                }
+	            clazz = clazz.getSuperclass();
+	        }
+	    } catch (Exception e) {
+	        Logger.warn(ExceptionUtil.getStackTrace(e));
+	        // throw new RuntimeException( e );
+	    }
+	    return null;
 	}
 
 	/**

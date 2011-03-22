@@ -18,7 +18,7 @@ import org.elasticsearch.node.NodeBuilder;
 import play.Logger;
 import play.Play;
 import play.PlayPlugin;
-import play.db.jpa.Model;
+import play.db.Model;
 import play.mvc.Router;
 
 // TODO: Auto-generated Javadoc
@@ -51,6 +51,12 @@ public class ElasticSearchPlugin extends PlayPlugin {
 	 * @return true, if is local mode
 	 */
 	private boolean isLocalMode() {
+		if ( Play.configuration.getProperty("elasticsearch.client") == null && Play.configuration.getProperty("elasticsearch.local") == null ) {
+			return true;
+		}
+		if ( Play.configuration.getProperty("elasticsearch.client") != null && Play.configuration.getProperty("elasticsearch.local") == null ) {
+			return false;
+		}
 		return Boolean.getBoolean(Play.configuration.getProperty("elasticsearch.local").trim());
 	}
 
