@@ -5,7 +5,7 @@ by *Felipe Oliveira*
 "http://mashup.fm(http://mashup.fm)":http://mashup.fm
 "http://geeks.aretotally.in(http://geeks.aretotally.in)":http://geeks.aretotally.in
 
-Integrate Elastic Search in a Play! Framework Application. This module uses JPA events to notify Elastic Search of events of their own. In Local Mode it embeds a running Elastic Search instance (port 9002 by default), a good choice for development. In Client Mode it connects to an external instance of Elastic Search, that might be your setup in production.
+Integrate Elastic Search in a Play! Framework Application. This module uses JPA events to notify Elastic Search of events of their own. In Local Mode it embeds a running Elastic Search instance (port 9200 by default), a good choice for development. In Client Mode it connects to an external instance of Elastic Search, that might be your setup in production.
 
 
 h2. Prerequisites
@@ -37,7 +37,7 @@ You need to configure the module by setting these properties in your application
 
 				@# Option 2) Elastic Search (Client Model)
 				elasticsearch.local=false
-				elasticsearch.client=mynode1:9002,mynode2:9002@
+				elasticsearch.client=mynode1:9200,mynode2:9200@
 
 
 h2. Usage
