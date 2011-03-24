@@ -16,7 +16,6 @@
 	<classpathentry kind="lib" path="/Users/felipera/development/elasticsearch/lib/lucene-memory-3.0.3.jar"/>
 	<classpathentry kind="lib" path="/Users/felipera/development/elasticsearch/lib/lucene-queries-3.0.3.jar"/>
 	<classpathentry kind="lib" path="/Users/felipera/development/elasticsearch/lib/lucene-snowball-3.0.3.jar"/>
-	<classpathentry kind="lib" path="/Users/felipera/development/elasticsearch/lib/play-elasticsearch.jar"/>
 	<classpathentry kind="lib" path="/Users/felipera/Downloads/play-1.1/framework/lib/activation-1.1.1.jar"/>
 	<classpathentry kind="lib" path="/Users/felipera/Downloads/play-1.1/framework/lib/antlr-2.7.6.jar"/>
 	<classpathentry kind="lib" path="/Users/felipera/Downloads/play-1.1/framework/lib/bcprov-jdk15-145.jar"/>

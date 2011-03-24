@@ -1,0 +1,9 @@
+# Test data
+
+SampleModel(b1):
+    field1:     v1
+    field2:     v2
+    
+SampleModel(b2):
+    field1:     v1
+    field2:     v2   

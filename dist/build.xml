@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="elasticsearch" default="build" basedir=".">
+
+	<path id="project.classpath">
+		<pathelement path="/Users/felipera/play/framework/classes" />
+		<fileset dir="/Users/felipera/play/framework/lib">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="/Users/felipera/play/framework">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="lib">
+			<include name="*.jar" />
+		</fileset>
+	</path>
+	
+	<target name="compile">
+
+		<property environment="env" />
+		<property name="play.path" location="/Users/felipera/play" />
+		<condition property="env.PLAY_HOME" value="${env.HOME}/play">
+			<not>
+				<isset property="env.PLAY_HOME" />
+			</not>
+		</condition>
+		<property name="ant.build.javac.source" value="1.6" />
+		<property name="ant.build.javac.target" value="1.6" />
+
+		<mkdir dir="tmp/classes" />
+		<javac srcdir="src" destdir="tmp/classes" target="1.6" debug="true"
+			classpathref="project.classpath">
+		</javac>
+		
+	</target>
+
+	<target name="build" depends="compile">
+		<echo message="/Users/felipera/play"></echo>
+		<copy todir="tmp/classes">
+			<fileset dir="src">
+				<include name="**/*.properties" />
+				<include name="**/*.xml" />
+				<include name="**/play.plugins" />
+				<include name="**/play.static" />
+			</fileset>
+		</copy>
+		<jar destfile="lib/play-elasticsearch.jar" basedir="tmp/classes">
+			<manifest>
+				<section name="Play-module">
+					<attribute name="Specification-Title" value="elasticsearch" />
+				</section>
+			</manifest>
+		</jar>
+		<delete dir="tmp" />
+	</target>
+
+
+</project>
