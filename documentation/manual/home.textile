@@ -60,18 +60,18 @@ Example:
 
 h2. Searching
 
-				import static org.elasticsearch.index.query.xcontent.FilterBuilders.*;
-				import static org.elasticsearch.index.query.xcontent.QueryBuilders.*;
-				
-				org.elasticsearch.client.Client client = ElasticSearch.client();
-				SearchResponse response = client.prepareSearch("test")
-				        .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
-				        .setQuery(termQuery("multi", "test"))
-				        .setFrom(0).setSize(60).setExplain(true))
-				        .execute()
-				        .actionGet();
+A few changes were introduced on 0.0.5 to facilitate searching capabilities. 
+We are adding a thin layer between the client application and Elastic Search to reduce the amount of complexity required to do searchin as well, not just indexing.
+
+			FieldQueryBuilder builder = new FieldQueryBuilder ("fieldName", value);
+			SearchResults results = ElasticSearch.search(builder);
+			
+
+SearchResults a very simple POJO with two properties for now, totalCount and list of objects.
+			
+
 				        
-See Elastic Search for more information.
+See ElasticSearch.com for more information.
 
 
 
