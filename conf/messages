@@ -3,3 +3,33 @@
 # For exemple, for french create a messages.fr file
 
 #elasticsearch.name=elasticsearch
+elasticsearch.title=Elastic Search
+elasticsearch.home=Home
+elasticsearch.blank=New
+elasticsearch.index.title=Choose the object to edit
+elasticsearch.index.objectType=Search
+elasticsearch.index.action=
+elasticsearch.index.add=Add
+elasticsearch.add=Add &{%s}
+elasticsearch.search.title=&{%s}
+elasticsearch.search.size=%d &{%s}
+elasticsearch.search.totalSize=%d total
+elasticsearch.pagination.previous=¬´ Previous
+elasticsearch.pagination.next=Next ¬ª
+elasticsearch.pagination.last=Last ¬ª¬ª
+elasticsearch.pagination.first=¬´¬´ First
+elasticsearch.show.title=Edit &{%s}
+elasticsearch.save=Save
+elasticsearch.saveAndContinue=Save and continue editing
+elasticsearch.cancel=Cancel
+elasticsearch.hasErrors=Please correct errors
+elasticsearch.blank.title=Add &{%s}
+elasticsearch.saveAndAddAnother=Save and create another
+elasticsearch.delete=Delete &{%s}
+elasticsearch.created=The &{%s} has been created
+elasticsearch.saved=The &{%s} has been saved
+elasticsearch.deleted=The &{%s} has been deleted
+elasticsearch.delete.error=Cannot delete this object
+elasticsearch.search=Search
+elasticsearch.none=(None)
+elasticsearch.selectValue=(Please select a value)

@@ -20,7 +20,6 @@ package controllers;
 
 import play.mvc.Controller;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Class ElasticSearchAdmin.
  */

@@ -1,0 +1,339 @@
+/** Administration area **/
+
+#elasticsearch {
+	margin: 0;
+	padding: 0;
+	font-family: 'Helvetica', 'Arial', 'Sans';
+	font-size: 90%;
+	color: #111;
+}
+
+/** Header **/
+
+#elasticsearch #elasticsearchHeader {
+	background: #111111;
+	padding: 10px 20px;
+}
+
+#elasticsearch #elasticsearchHeader h1 {
+	margin: 0;
+	font-weight: normal;
+}
+
+#elasticsearch #elasticsearchHeader h1 a {
+	color: gold;
+	text-decoration: none;
+}
+
+/** Breadcrumb **/
+
+#elasticsearchBreadcrumb {
+	padding: 5px 20px;
+	font-size: 80%;
+	border-bottom: 1px solid #ddd;
+}
+
+#elasticsearchBreadcrumb ul {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+#elasticsearchBreadcrumb li {
+	display: inline;
+}
+
+#elasticsearchBreadcrumb a {
+	color: #333;
+}
+
+#elasticsearchBreadcrumb li:last-child a {
+	color: #888;
+	text-decoration: none;
+}
+
+/** Flash message **/
+
+.elasticsearchFlash {
+	padding: 5px 20px;
+	border-bottom: 1px solid #ddd;
+	color: #fff;
+}
+
+.flashError {
+	background: #c00;
+}
+
+.flashSuccess {
+	background: #54BD06;
+}
+
+/** Content **/
+
+#elasticsearch #elasticsearchContent {
+	padding: 10px 20px;
+}
+
+#elasticsearch #elasticsearchContent h2 {
+	color: #333;
+	font-weight: normal;
+	margin-top: 10px;
+}
+
+#elasticsearch #elasticsearchContent a {
+	color: #444;
+}
+
+/** Tables **/
+
+#elasticsearch #elasticsearchContent table {
+	width: 100%;
+	border: 1px solid #ddd;
+	border-top: none;
+	border-collapse: collapse;
+}
+
+#elasticsearch #elasticsearchContent table thead tr {
+	background: #0A65AF;
+}
+
+#elasticsearch #elasticsearchContent table th {
+	color: #fff;
+	font-weight: bold;
+}
+
+#elasticsearch #elasticsearchContent table th a {
+	color: #fff;
+	font-weight: bold;
+}
+
+#elasticsearch #elasticsearchContent table th {
+	text-align: left;
+	padding: 6px 5px;
+}
+
+#elasticsearch #elasticsearchContent table td {
+	text-align: left;
+	padding: 4px 5px;
+}
+
+#elasticsearch #elasticsearchContent table td {
+	border-bottom: 1px solid #eee;
+}
+
+#elasticsearch #elasticsearchContent table tr.even {
+	background: #f9f9f9;
+}
+
+#elasticsearch #elasticsearchContent table tr:last-child td {
+	border-bottom: 1px solid #ddd;
+}
+
+.elasticsearchSortedAsc:after {
+	content: '▼';
+}
+
+.elasticsearchSortedDesc:after {
+	content: '▲';
+}
+
+/** Forms **/
+
+form {
+	margin: 0;
+}
+
+input, textarea, select {
+	font-family: 'Helvetica', 'Arial', 'Sans';
+	font-size: 12px;
+}
+
+textarea {
+	padding: 2px;
+}
+
+.objectForm {
+	border: 1px solid #ddd;
+}
+
+label {
+	display: block;
+	font-weight: bold;
+	width: 20%;
+	float: left;
+	color: #666;
+	cursor: pointer;
+}
+
+.elasticsearchField {
+	padding: 10px;
+	border-bottom: 1px solid #eee;
+	position: relative;
+}
+
+.elasticsearch_hidden {
+    display: none;
+}
+
+.elasticsearchButtons {
+	background: #efefef;
+	text-align: right;
+	margin: 0;
+	padding: 10px;
+}
+
+.elasticsearchField .error {
+	color: #c00;
+	padding-left: 10px;
+	position: absolute;
+	top: 15px;
+	font-size: 80%;
+}
+
+.elasticsearchField .hasError {
+	color: #c00;
+}
+
+.elasticsearchField select[multiple] {
+	max-height: 100px;
+}
+
+.elasticsearchField .elasticsearchHelp {
+	font-size: 70%;
+	color: #888;
+	display: block;
+	margin-left: 20%;
+	margin-top: 5px;
+}
+
+form .currentAttachment {
+	display: block;
+	font-size: 80%;
+	margin-left: 20%;
+	padding-top: 4px;
+}
+
+form .removeAttachment {
+    display: block;
+    font-size: 80%;
+    margin-left: 20%;
+}
+
+/** Footer **/
+
+#elasticsearch #elasticsearchFooter {
+	font-size: 80%;
+	color: #aaa;
+	padding: 10px 20px;
+	border-top: 1px dashed #ccc;
+	border-bottom: 1px dashed #ccc;
+	margin-top: 20px;
+}
+
+#elasticsearch #elasticsearchFooter a {
+	color: #333;
+}
+
+/** Home **/
+
+.elasticsearchNew {
+	text-align: right !important;
+}
+
+.elasticsearchNew a {
+	background: #54BD06;
+	padding: 2px 10px;
+	font-size: 90%;
+	-moz-border-radius: 8px;
+	-webkit-border-radius: 8px;
+	color: #fff !important;
+	text-decoration: none;
+}
+
+.elasticsearchNew a:hover {
+	opacity: .8;
+}
+
+/** List **/
+
+#elasticsearchList {
+	position: relative;
+}
+
+#elasticsearchListAdd a {
+	margin: 0;
+	position: absolute;
+	top: 0;
+	right: 0;
+	background: #54BD06;
+	padding: 3px 10px;
+	font-size: 90%;
+	-moz-border-radius: 8px;
+	-webkit-border-radius: 8px;
+	color: #fff !important;
+	text-decoration: none;
+}
+
+#elasticsearchListAdd a:hover {
+	opacity: .8;
+}
+
+#elasticsearchListSearch {
+	padding: 4px 5px;
+	border: 1px solid #ddd;
+	background: #efefef;
+}
+
+#elasticsearchListSearch input[type=text] {
+	width: 40%;
+}
+
+#elasticsearchListSearch a {
+	color: #111 !important;
+	font-size: 90%;
+}
+
+#elasticsearchListPagination {
+	padding: 4px 5px;
+	border: 1px solid #ddd;
+	background: #efefef;
+	border-top: 0;
+	font-size: 90%;
+	position: relative;
+}
+
+#elasticsearchListPagination .elasticsearchCount {
+	margin: 0;
+}
+
+#elasticsearchListPagination .elasticsearchPages {
+	margin: 0;
+	position: absolute;
+	right: 5px;
+	top: 4px;
+}
+
+/** Show **/
+
+#elasticsearchShow {
+	position: relative;
+}
+
+.elasticsearchDelete input {
+	color: #fff;
+	border: none;
+	margin: 0;
+	position: absolute;
+	top: 0;
+	right: 0;
+	background: #c00;
+	padding: 2px 10px;
+	font-size: 90%;
+	-moz-border-radius: 8px;
+	-webkit-border-radius: 8px;
+	cursor: pointer;
+}
+
+.elasticsearchDelete input:hover {
+	opacity: .7;
+}

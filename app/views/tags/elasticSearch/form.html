@@ -1,0 +1,55 @@
+%{
+    if(_object) {
+        currentObject = _object
+        currentType = _('controllers.elasticsearch$ObjectType').forClass(_object.getClass().getName())
+    } else if(_class) {
+        currentObject = null;
+        currentType = _('controllers.elasticsearch$ObjectType').forClass(_class)
+    } else {
+        currentObject = _caller.object
+        currentType = _caller.type
+    }
+
+    // Eval fields tags
+    def fieldsHandler = [:]
+    if(_body) {
+        _body.setProperty('fieldsHandler', fieldsHandler);
+        _body.toString(); // we skeep the real result ...
+    }
+}%
+
+#{list items:_fields ?: currentType.fields*.name, as:'fieldName'}
+
+    %{
+        am = ''
+    }%
+
+    %{ def field = currentType.getField(fieldName) }%
+
+<div class="elasticsearchField elasticsearch_${field.type}">
+
+    %{ if(fieldsHandler[fieldName]) { }%
+        %{
+            def handler = fieldsHandler[fieldName]
+            handler.setProperty('fieldName', 'object.' + field?.name + (field?.type == 'relation' ? '.' + currentType.keyName : ''))
+            def oldObject = handler.getProperty('object')
+            handler.setProperty('object', currentObject)
+            out.println(handler.toString())
+            handler.setProperty('object', oldObject)
+            handler.setProperty('fieldName', null)
+        }%
+    %{ } else { }%
+
+        #{ifnot field}
+            %{ throw new play.exceptions.TagInternalException('Field not found -> ' + fieldName) }%
+        #{/ifnot}
+
+        #{if field.type == 'text'}
+            #{elasticsearch.textField name:field.name, value:(currentObject ? currentObject[field.name] : null) /}
+        #{/if}
+
+    %{ } }%
+
+</div>
+
+#{/list}

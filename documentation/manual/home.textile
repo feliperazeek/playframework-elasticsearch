@@ -5,7 +5,27 @@ by *Felipe Oliveira*
 "http://mashup.fm(http://mashup.fm)":http://mashup.fm
 "http://geeks.aretotally.in(http://geeks.aretotally.in)":http://geeks.aretotally.in
 
+Searching is hard, just ask Google! Thankfully Lucene came about to provide incredible searching capabilities to the Java community. I have personally been using Lucene since 1999 and I am a huge fan, probably my very favorite Java project ever.
+
+Lucene provides some great functionality but you still have a lot of work to do to integrate your app into Lucene; you need to map your models into a Lucene document, you need to write an indexer, you need to manage your indexes, cluster them, keep them in sync, write the search interface, etc. That’s a lot of work! To solve this problem there was a generation of frameworks built on top of Lucene, the most popular ones were Solr and Compass.
+
+Compass and Solr are great frameworks, I have used them in production for very large deployments. I have built Foreclosure.com and Fannie Mae’s HomePath.com, Zillow.com’s Foreclosure Channel and an internal application to support HUD’s broker network for Florida, New York, New Jersey and Georgia entirely with that technology. There are still problems, it’s hard to cluster it, maintain real-time updates, backups, not have a single point of failure meaning failover which brings us to the next generation.
+
+We finally come to Elastic Search from the awesome guys responsible for Compass! Elastic Search is the next generation of Compass, it’s a really great searching framework addressing a lot of the things that are so hard to deal with. It’s distributed, it supports Geo Spatial queries such bounding box searches, radius searches (around me type of search), backups on a slower data storages such as EC2, schema mapping, REST/JSON interface; like I said it’s really great stuff!
+
+Elastic Search is a Distributed Search Solution based on Apache Lucene. 
+
+The main advantages are: 
+- Schema-Free  (NoSQL)
+- REST API Support - Easy Integration
+- Reliable/No Single Point of Failure (you won't lose any data or have any outage if a node goes broke, huge point when considered the next point also)
+- Near Real-Time (pretty self explanatory)
+- Async Write Behind for Long Term Storage (store data on a separate data center for example without affecting the performance of your application)
+- Geospatial Support (forget about highly complex packages such as PostGIS)
+
+
 Integrate Elastic Search in a Play! Framework Application. This module uses JPA events to notify Elastic Search of events of their own. In Local Mode it embeds a running Elastic Search instance (port 9200 by default), a good choice for development. In Client Mode it connects to an external instance of Elastic Search, that might be your setup in production.
+
 
 
 h2. Prerequisites
@@ -21,11 +41,13 @@ Install the elasticsearch module from the modules repository:
 @play install elasticsearch@
 
 
+
 h2. Enable the module
 
 After installing the module, add the following to your application.conf to enable it:
 
-@module.elasticsearch=${play.path}/modules/elasticsearch-0.0.4@
+@module.elasticsearch=${play.path}/modules/elasticsearch-0.0.5@
+
 
 
 h2. Configure the module
@@ -40,9 +62,10 @@ You need to configure the module by setting these properties in your application
 				elasticsearch.client=mynode1:9200,mynode2:9200@
 
 
+
 h2. Usage
 
-You basically need to add annotation "@ElasticSearchable" to your Model class. It only works for JPA so far. 
+You basically need to add annotation "@ElasticSearchable" to your Model class. It only works for JPA so far. If a model has that annotation our module we'll watching for JPA events for instances of that class and route messages to Elastic Search to make sure Elastic Search index has the latest information available on the database.
 
 Example:
 
@@ -58,20 +81,19 @@ Example:
 				}
 
 
+
 h2. Searching
 
-A few changes were introduced on 0.0.5 to facilitate searching capabilities. 
-We are adding a thin layer between the client application and Elastic Search to reduce the amount of complexity required to do searchin as well, not just indexing.
+The biggest change on this release is a nicer search interface. We are providing a very simple way to get started, inspired by Play!'s CRUD module.
+Basically you need to create a controller class and extend ElasticSearchController. Use annotation @ElasticSearchController.For(YOURMODELCLASS.class) to tell our module what model you want to search on, here's an example:
 
-			FieldQueryBuilder builder = new FieldQueryBuilder ("fieldName", value);
-			SearchResults results = ElasticSearch.search(builder);
+				@ElasticSearchController.For(ElasticSearchSampleModel.class)
+				public class ElasticSearchExample extends ElasticSearchController {
+				
+				} 
 			
 
-SearchResults a very simple POJO with two properties for now, totalCount and list of objects.
-			
-
-				        
-See ElasticSearch.com for more information.
+You should be able to search on http://localhost:9000/elasticSearchExample/index. If you want to customize the views, just create a directory ELASTIC_SEARCH under views and change whatever you need to change.
 
 
 
@@ -81,9 +103,11 @@ After you start your application (play run), you should have an admin interface 
 
 
 
+
 h2. Source Code
 
 Fork it on Github "https://github.com/feliperazeek/playframework-elasticsearch(https://github.com/feliperazeek/playframework-elasticsearch)":https://github.com/feliperazeek/playframework-elasticsearch.
+
 
 
 
@@ -93,7 +117,6 @@ h2. Roadmap
 * Adding support for non-Jpa models. 
 * Parent/Child support
 * Customizations for mapping, etc
-* Sample Search Page
 
 
 

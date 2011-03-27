@@ -1,0 +1,19 @@
+#{extends 'ELASTIC_SEARCH/layout.html' /}
+
+<div id="elasticSearchList" class="${type.name}">
+	
+	<h2 id="elasticSearchListTitle">&{'elasticsearch.search.title', type.name}</h2>
+
+	<div id="elasticSearchListSearch">
+		#{elasticSearch.search /}
+	</div>
+
+	<div id="elasticSearchListTable">
+		#{elasticSearch.table /}
+	</div>
+	
+	<div id="elasticSearchListPagination">
+		#{elasticSearch.pagination /}
+	</div>
+
+</div>
