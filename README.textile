@@ -5,6 +5,12 @@ by *Felipe Oliveira*
 "http://mashup.fm(http://mashup.fm)":http://mashup.fm
 "http://geeks.aretotally.in(http://geeks.aretotally.in)":http://geeks.aretotally.in
 
+Screencast
+http://geeks.aretotally.in/play-elastic-search-module-new-0-0-5-release-with-screencast
+
+Demo Source Code
+https://github.com/mashup-fm/playframework-elasticsearch-0.0.5-demo
+
 Searching is hard, just ask Google! Thankfully Lucene came about to provide incredible searching capabilities to the Java community. I have personally been using Lucene since 1999 and I am a huge fan, probably my very favorite Java project ever.
 
 Lucene provides some great functionality but you still have a lot of work to do to integrate your app into Lucene; you need to map your models into a Lucene document, you need to write an indexer, you need to manage your indexes, cluster them, keep them in sync, write the search interface, etc. That’s a lot of work! To solve this problem there was a generation of frameworks built on top of Lucene, the most popular ones were Solr and Compass.
