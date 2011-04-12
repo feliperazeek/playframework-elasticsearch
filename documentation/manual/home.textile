@@ -46,7 +46,7 @@ h2. Enable the module
 
 After installing the module, add the following to your application.conf to enable it:
 
-@module.elasticsearch=${play.path}/modules/elasticsearch-0.0.5@
+@module.elasticsearch=${play.path}/modules/elasticsearch-0.0.6@
 
 
 
