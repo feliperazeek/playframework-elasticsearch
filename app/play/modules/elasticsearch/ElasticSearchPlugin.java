@@ -47,27 +47,27 @@ import play.mvc.Router;
  */
 public class ElasticSearchPlugin extends PlayPlugin {
 
-	/** The _session. */
-	private ThreadLocal<Client> _session = new ThreadLocal<Client>();
-
 	/** The started. */
 	private static boolean started = false;
 
 	/** The model index. */
 	private static Map<Class<?>, Boolean> modelIndex = null;
 
+	/** The client. */
+	private static Client client = null;
+
 	/**
 	 * Client.
-	 *
+	 * 
 	 * @return the client
 	 */
-	public Client client() {
-		return _session.get();
+	public static Client client() {
+		return client;
 	}
 
 	/**
 	 * Checks if is local mode.
-	 *
+	 * 
 	 * @return true, if is local mode
 	 */
 	private boolean isLocalMode() {
@@ -91,7 +91,7 @@ public class ElasticSearchPlugin extends PlayPlugin {
 
 	/**
 	 * Gets the hosts.
-	 *
+	 * 
 	 * @return the hosts
 	 */
 	public static String getHosts() {
@@ -102,8 +102,9 @@ public class ElasticSearchPlugin extends PlayPlugin {
 		return s;
 	}
 
-	/*
-	 * (non-Javadoc)
+	/**
+	 * This method is called when the application starts - It will start ES
+	 * instance
 	 * 
 	 * @see play.PlayPlugin#onApplicationStart()
 	 */
@@ -113,7 +114,7 @@ public class ElasticSearchPlugin extends PlayPlugin {
 		modelIndex = new HashMap<Class<?>, Boolean>();
 
 		// Make sure it doesn't get started more than once
-		if (_session.get() != null || started) {
+		if ((client != null) || started) {
 			Logger.debug("Elastic Search Started Already!");
 			return;
 		}
@@ -123,11 +124,8 @@ public class ElasticSearchPlugin extends PlayPlugin {
 		settings.put("client.transport.sniff", true);
 		settings.build();
 
-		// Define Client
-		Client client = null;
-
 		// Check Model
-		if (isLocalMode()) {
+		if (this.isLocalMode()) {
 			Logger.info("Starting Elastic Search for Play! in Local Mode");
 			NodeBuilder nb = nodeBuilder().settings(settings).local(true).client(false).data(true);
 			Node node = nb.node();
@@ -164,15 +162,13 @@ public class ElasticSearchPlugin extends PlayPlugin {
 		if (client == null) {
 			throw new RuntimeException("Elastic Search Client cannot be null - please check the configuration provided and the health of your Elastic Search instances.");
 		}
-
-		// Bind Client to Thread Local
-		_session.set(client);
 	}
 
 	/**
 	 * Checks if is elastic searchable.
-	 *
-	 * @param o the o
+	 * 
+	 * @param o
+	 *            the o
 	 * @return true, if is elastic searchable
 	 */
 	private boolean isElasticSearchable(Object o) {
@@ -191,8 +187,8 @@ public class ElasticSearchPlugin extends PlayPlugin {
 		return false;
 	}
 
-	/*
-	 * (non-Javadoc)
+	/**
+	 * This is the method that will be sending data to ES instance
 	 * 
 	 * @see play.PlayPlugin#onEvent(java.lang.String, java.lang.Object)
 	 */
@@ -207,7 +203,7 @@ public class ElasticSearchPlugin extends PlayPlugin {
 		}
 
 		// Check if object has annotation
-		boolean isSearchable = isElasticSearchable(context);
+		boolean isSearchable = this.isElasticSearchable(context);
 		// Logger.info("Searchable: %s", isSearchable);
 		if (isSearchable == false) {
 			// Logger.debug("Not marked to be elastic searchable!");

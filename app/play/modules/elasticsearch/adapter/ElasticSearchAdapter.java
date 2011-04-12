@@ -54,9 +54,11 @@ public abstract class ElasticSearchAdapter {
 
 	/**
 	 * Start index.
-	 *
-	 * @param client the client
-	 * @param clazz the clazz
+	 * 
+	 * @param client
+	 *            the client
+	 * @param clazz
+	 *            the clazz
 	 */
 	public static void startIndex(Client client, Class<?> clazz) {
 		createIndex(client, getIndexName(clazz));
@@ -64,9 +66,11 @@ public abstract class ElasticSearchAdapter {
 
 	/**
 	 * Start index.
-	 *
-	 * @param client the client
-	 * @param clazz the clazz
+	 * 
+	 * @param client
+	 *            the client
+	 * @param clazz
+	 *            the clazz
 	 */
 	public static void startIndex(Client client, String clazz) {
 		createIndex(client, getIndexName(clazz));
@@ -74,9 +78,11 @@ public abstract class ElasticSearchAdapter {
 
 	/**
 	 * Creates the index.
-	 *
-	 * @param client the client
-	 * @param indexName the index name
+	 * 
+	 * @param client
+	 *            the client
+	 * @param indexName
+	 *            the index name
 	 */
 	private static void createIndex(Client client, String indexName) {
 		try {
@@ -94,15 +100,25 @@ public abstract class ElasticSearchAdapter {
 
 	/**
 	 * Index model.
-	 *
-	 * @param <T> the generic type
-	 * @param client the client
-	 * @param model the model
-	 * @throws Exception the exception
+	 * 
+	 * @param <T>
+	 *            the generic type
+	 * @param client
+	 *            the client
+	 * @param model
+	 *            the model
+	 * @throws Exception
+	 *             the exception
 	 */
 	public static <T extends Model> void indexModel(Client client, T model) throws Exception {
 		// Log Debug
 		Logger.debug("Start Index Model: %s", model);
+
+		// Check Client
+		if (client == null) {
+			Logger.error("Elastic Search Client is null, aborting");
+			return;
+		}
 
 		// Define Content Builder
 		XContentBuilder contentBuilder = null;
@@ -120,7 +136,7 @@ public abstract class ElasticSearchAdapter {
 			// Loop into each field
 			for (String name : fields) {
 				name = name.replaceFirst(model.getClass().getCanonicalName() + ".", "");
-				if (StringUtils.isNotBlank(name) && IGNORE_FIELDS.contains(name) == false) {
+				if (StringUtils.isNotBlank(name) && (IGNORE_FIELDS.contains(name) == false)) {
 					Object value = ReflectionUtil.getFieldValue(model, name);
 					if (value != null) {
 						Logger.debug("Field: " + name + ", Value: " + value);
@@ -145,11 +161,15 @@ public abstract class ElasticSearchAdapter {
 
 	/**
 	 * Delete model.
-	 *
-	 * @param <T> the generic type
-	 * @param client the client
-	 * @param model the model
-	 * @throws Exception the exception
+	 * 
+	 * @param <T>
+	 *            the generic type
+	 * @param client
+	 *            the client
+	 * @param model
+	 *            the model
+	 * @throws Exception
+	 *             the exception
 	 */
 	public static <T extends Model> void deleteModel(Client client, T model) throws Exception {
 		Logger.debug("Delete Model: %s", model);
@@ -160,8 +180,9 @@ public abstract class ElasticSearchAdapter {
 
 	/**
 	 * Gets the index name.
-	 *
-	 * @param model the model
+	 * 
+	 * @param model
+	 *            the model
 	 * @return the index name
 	 */
 	public static String getIndexName(Model model) {
@@ -170,8 +191,9 @@ public abstract class ElasticSearchAdapter {
 
 	/**
 	 * Gets the index name.
-	 *
-	 * @param clazz the clazz
+	 * 
+	 * @param clazz
+	 *            the clazz
 	 * @return the index name
 	 */
 	public static String getIndexName(Class clazz) {
@@ -180,8 +202,9 @@ public abstract class ElasticSearchAdapter {
 
 	/**
 	 * Gets the index name.
-	 *
-	 * @param clazz the clazz
+	 * 
+	 * @param clazz
+	 *            the clazz
 	 * @return the index name
 	 */
 	private static String getIndexName(String clazz) {
