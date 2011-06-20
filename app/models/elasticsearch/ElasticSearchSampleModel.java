@@ -20,7 +20,6 @@ package models.elasticsearch;
 
 import javax.persistence.Entity;
 
-import play.modules.elasticsearch.annotations.ElasticSearchable;
 import play.db.jpa.Model;
 
 // TODO: Auto-generated Javadoc
@@ -28,7 +27,7 @@ import play.db.jpa.Model;
  * The Class ElasticSearchSampleModel.
  */
 @Entity
-@ElasticSearchable
+@play.modules.elasticsearch.annotations.ElasticSearchable
 public class ElasticSearchSampleModel extends Model {
 
 	/** The Constant serialVersionUID. */
