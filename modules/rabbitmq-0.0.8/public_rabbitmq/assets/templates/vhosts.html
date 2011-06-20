@@ -1,0 +1,61 @@
+<script type="text/javascript" charset="utf-8">
+  $(".add").click(function() {     
+  jQuery.facebox('
+  <form id="new_vhost_form" action="#/vhosts" method="post">
+    <p><label for="name">Vhost name:</label><input type="text" id="vhost_name" name="vhost_name" /></p>
+    <p><input type="submit" value="Add vhost" /></p>
+  </form>
+  ');
+	
+  	$("form#new_vhost_form").submit(function() {
+  		var vhost = $("#vhost_name").val();
+  		var dataString = {"name" : vhost};
+  		post("/vhosts", {
+  		  data: $.toJSON(dataString),
+  			success: function(data) {
+  				$.facebox.close();
+  				$("#vhosts_list").append('<li id="'+vhost+'"><div class="remove"><a href="#" rel="'+vhost+'">'+vhost+'</a></div></li>');
+  				alert("Added!");
+  			}
+  		});
+  	});
+	 
+  });
+	
+	$(".remove a").click(function() {
+    var vhost = this.rel;
+	  jQuery.facebox('
+    <p>Delete: '+ vhost +' </p>
+    <form id="delete_vhost_form" action="#/vhosts" method="post">
+      <p><input type="submit" value="Delete vhost" /></p>
+    </form>
+    ');
+
+    $("form#delete_vhost_form").submit(function() {
+      var dataString = {"name" : vhost};
+      are_you_sure("Are you sure you want to remove "+vhost, function() {
+        post_delete("/vhosts/"+vhost, {
+             data: $.toJSON(dataString),
+             success: function(data) {$("td#"+vhost).remove();}
+           });
+      });
+    });
+	});	
+</script>
+
+<div id="vhosts">
+  
+  <div class="add"><h3>Vhosts</h3></div>
+  
+  <table id="vhost_lists" class="sexy_table">
+    <tr>
+      <th>Name</th>
+    </tr>
+    <% for ( var i = 0; i < vhosts.length; i++ ) { %>
+      <tr>
+        <td id="<%= vhosts[i] %>"><div class='remove'><a href='#' rel='<%= vhosts[i] %>'><%= vhosts[i] %></a></td>
+      </tr>
+    <% } %>
+  </table>
+  
+</div>

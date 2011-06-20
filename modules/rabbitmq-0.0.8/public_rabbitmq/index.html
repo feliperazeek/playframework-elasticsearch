@@ -1,0 +1,95 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+  <title>Alice, the app</title>
+  
+  <script type="text/javascript" src="assets/js/jquery-1.3.2.min.js"></script>
+  <script type="text/javascript" src="assets/js/jquery.json-1.3.min.js"></script>  
+  <script type="text/javascript" src="assets/js/facebox.js"></script>
+  <script type="text/javascript" src="assets/js/sammy.min.js"></script>
+  <script type="text/javascript" src="assets/js/functions.js"></script>
+  <script type="text/javascript" src="assets/js/raphael-min.js"></script>
+  <script type="text/javascript" src="assets/js/simplegraph.js"></script>
+  <script type="text/javascript" src="assets/js/app.js"></script>
+  
+  <link rel="stylesheet" href="assets/css/reset.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="assets/css/facebox.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="assets/css/base.css" type="text/css" media="screen" charset="utf-8">
+</head>
+
+<body>
+  <a href="http://github.com/auser/alice"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png" alt="Fork me on GitHub" /></a>
+  
+  <div id="header">
+    <div class="container">
+      <h1><a href="/">wonder<span>land</span></a></h1>
+    </div>
+  </div>
+  
+  <div id="error">
+    <div class="message">      
+    </div>
+  </div>
+  
+  <div id="notice">
+    <div class="message">      
+    </div>
+  </div>
+  
+  <div class="container">        
+    <div id="sidebar">
+      
+      <div class="widget">
+        <dl>
+          <dt id="dashboard"><a href="#/">Dashboard</a></dt>
+          <dd>Dashboard</dd>
+          
+          <dt id="vhosts_link"><a href="#/vhosts">Vhosts</a></dt>
+          <dd>Vhost information</dd>
+          
+          <dt id="users_link"><a href="#/users">Users</a></dt>
+          <dd>User information</dd>
+          
+          <dt id="permissions_link"><a href="#/permissions">Permissions</a></dt>
+          <dd>Permission information</dd>
+          
+          <dt id="bindings_link"><a href="#/bindings">Bindings</a></dt>
+          <dd>Bindings information</dd>
+          
+          <dt id="exchanges_link"><a href="#/exchanges">Exchanges</a></dt>
+          <dd>Exchanges information</dd>
+          
+          <dt id="connections_link"><a href="#/connections">Connections</a></dt>
+          <dd>Current connection information</dd>
+          
+          <dt id="queues_link"><a href="#/queues">Queues</a></dt>
+          <dd>Queues information</dd>
+                    
+        </dl>
+			</div>
+      
+    </div>
+    
+    <div id="content">
+      Alice the app
+    </div>
+  </div>
+  
+  <div id="footer">
+    Version <div id="version_number">0.1</div>
+    2009 Ari Lerner, Nate Murray, Michael Fairchild @ CloudTeam
+  </div>
+  
+  <div class="hidden">    
+  </div>
+  
+  <script type="text/javascript" charset="utf-8">
+    get_page("/version", {
+      success: function(d) { $("#version_number").html(d.version) }
+    });
+  </script>
+</body>
+
+</html>

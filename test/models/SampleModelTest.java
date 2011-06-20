@@ -18,6 +18,8 @@
  */
 package models;
 
+import models.elasticsearch.ElasticSearchSampleModel;
+
 /**
  * The Class SampleModelTest.
  */

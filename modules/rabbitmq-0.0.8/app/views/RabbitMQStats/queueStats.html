@@ -1,0 +1,18 @@
+#{extends 'RabbitMQStats/layout.html' /}
+#{set title:'RabbitMQ' /}
+
+<h1>Live Stats: ${queueName}</h1>
+
+<section>
+  
+
+</section>
+
+<script type="text/javascript" charset="utf-8">
+    setInterval(function() {
+        $('section').load('@{queueStatsDetails(queueName)}')
+    }, 1000)
+</script>                 
+
+<br><br>
+<a href="@{RabbitMQStats.index()}">Return Main Page</a>

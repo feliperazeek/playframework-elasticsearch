@@ -5,7 +5,10 @@
 #
 # ~~~~
 
-GET     /?                      Module.index
+GET     /?                      elasticsearch.ElasticSearchAdmin.index
+
+*     /admin/                       module:crud
+GET   /public/              	   staticDir:public
 
 #{elasticsearch.types}
 GET			/?											${type.controllerClass.name.substring(12).replace('$','')}.index
@@ -14,8 +17,7 @@ POST		/${type.controllerName}/search				${type.controllerClass.name.substring(12
 #{/elasticsearch.types}
 
 
-GET     /es-admin               						ElasticSearchAdmin.index
-GET     /es-admin/               						ElasticSearchAdmin.index
-GET     /elasticsearch_public               			staticDir:elasticsearch_public
+GET     /es-admin               						elasticsearch.ElasticSearchAdmin.index
+GET     /es-admin/               						elasticsearch.ElasticSearchAdmin.index
 
 *       /{controller}/{action}                  		{controller}.{action}

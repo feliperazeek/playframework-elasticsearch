@@ -1,0 +1,26 @@
+# This file defines all module routes (Higher priority routes first)
+#
+# import these routes in the main app as :
+#*     /                       module:rabbitmq
+#
+# ~~~~
+
+#* /console module:console
+
+WS      /streamsocket                         	RabbitMQWebSocket.StreamSocket.index
+
+GET		/debugData								RabbitMQStats.fireSampleQueue
+GET		/stats									RabbitMQStats.queueStats
+GET		/queueStats								RabbitMQStats.queueStatsDetails
+GET		/stream									RabbitMQStats.stream
+
+GET     /public_rabbitmq/                       staticDir:public_rabbitmq
+
+GET  	/  										RabbitMQStats.index
+GET  	/queue/{queueName}/stats  				RabbitMQStats.queueStats
+GET  	/queue/{queueName}/producer/success  	RabbitMQStats.producerSuccess
+GET  	/queue/{queueName}/producer/failed  	RabbitMQStats.producerFailed
+GET  	/queue/{queueName}/consumer/success  	RabbitMQStats.consumerSuccess
+GET  	/queue/{queueName}/consumer/failed  	RabbitMQStats.consumerFailed
+
+*       /{controller}/{action}                  {controller}.{action}

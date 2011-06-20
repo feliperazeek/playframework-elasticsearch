@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="resteasy-play-module" default="build" basedir=".">
+
+	<property name="version" value="1.3.1"/>
+	<property name="dist.dir-1.1" value="play-1.1-resteasy-module-${version}"/>
+	<property name="dist.dir-src" value="resteasy-play-module-${version}"/>
+
+    <path id="project.classpath">
+        <pathelement path="${play.path}/framework/classes"/>
+        <fileset dir="${play.path}/framework/lib">
+            <include name="*.jar"/>
+        </fileset>
+        <fileset dir="${play.path}/framework">
+            <include name="*.jar"/>
+        </fileset>
+        <fileset dir="lib">
+            <include name="*.jar"/>
+        </fileset>
+    </path>
+
+    <target name="build" depends="compile">
+
+        <copy todir="tmp/classes">
+            <fileset dir="src">
+                <include name="**/*.properties"/>
+                <include name="**/*.xml"/>
+                <include name="**/play.plugins"/>
+                <include name="**/play.static"/>
+            </fileset>
+        </copy>
+        <jar destfile="lib/play-resteasy-play-module.jar" basedir="tmp/classes">
+            <manifest>
+                <section name="Play-module">
+                    <attribute name="Specification-Title" value="resteasy-play-module"/>
+                </section>
+            </manifest>
+        </jar>
+        <delete dir="tmp" />
+    </target>
+
+    <target name="compile">
+        <mkdir dir="tmp/classes" />
+        <javac srcdir="src" destdir="tmp/classes" target="1.5" debug="true">
+            <classpath refid="project.classpath" />
+        </javac>
+    </target>
+
+	<target name="release">
+		<mkdir dir="dist"/>
+		<!-- Play 1.1 distrib -->
+		<mkdir dir="dist/${dist.dir-1.1}"/>
+		<copy todir="dist/${dist.dir-1.1}/" >
+			<fileset dir=".">
+				<include name="lib/**"/>
+				<include name="app/**"/>
+				<include name="src/**"/>
+				<include name="conf/**"/>
+			</fileset>
+			<fileset file="commands.py"/>
+			<fileset file="COPYING"/>
+			<fileset file="COPYING.LESSER"/>
+			<fileset file="README"/>
+		</copy>
+		<zip destfile="dist/${dist.dir-1.1}.zip">
+			<zipfileset dir="dist/${dist.dir-1.1}" prefix="${dist.dir-1.1}"/>
+		</zip>
+		<!-- Source distrib -->
+		<mkdir dir="dist/${dist.dir-src}"/>
+		<copy todir="dist/${dist.dir-src}/" >
+			<fileset dir="." includes="lib/**"/>
+			<fileset dir=".">
+				<include name="debian/**"/>
+				<exclude name="debian/play-1.1-resteasy-module-*/**"/>
+			</fileset>
+			<fileset dir="." includes="conf/**"/>
+			<fileset dir="." includes="src/**"/>
+			<fileset dir="." includes="app/**"/>
+			<fileset file="commands.py"/>
+			<fileset file="COPYING"/>
+			<fileset file="COPYING.LESSER"/>
+			<fileset file="README"/>
+			<fileset file="build.xml"/>
+		</copy>
+		<zip destfile="dist/${dist.dir-src}.zip">
+			<zipfileset dir="dist/${dist.dir-src}" prefix="${dist.dir-src}"/>
+		</zip>
+	</target>
+	
+	<target name="clean">
+		<delete dir="dist"/>
+	</target>
+
+</project>

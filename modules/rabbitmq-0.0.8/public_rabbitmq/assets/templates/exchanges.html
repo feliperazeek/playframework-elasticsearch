@@ -1,0 +1,32 @@
+<script type="text/javascript" charset="utf-8">
+</script>
+
+<div id="Exchanges">
+  
+  <h3>Exchanges</h3>
+  
+  <table id="data" class="sexy_table">
+  	<caption>Exchanges</caption>
+  	<thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Durable</th>
+        <th>Auto delete</th>
+        <th>Arguments</th>
+      </tr>
+  	</thead>
+  	<tbody>
+      <% for ( var i = 0; i < exchanges.length; i++ ) { %>
+        <tr>
+          <td><%= exchanges[i].name %></td>
+          <td><%= exchanges[i].type %></td>
+          <td><%= exchanges[i].durable %></td>
+          <td><%= exchanges[i].auto_delete %></td>
+          <td><%= exchanges[i].arguments %></td>
+        </tr>
+      <% } %>  	</tbody>
+  </table>
+  
+  
+</div>

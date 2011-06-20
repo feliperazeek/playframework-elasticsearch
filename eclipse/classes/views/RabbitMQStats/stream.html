@@ -1,0 +1,26 @@
+#{extends 'RabbitMQStats/layout.html' /}
+#{set title:'RabbitMQ WebSocket Stream' /}
+
+<h1>RabbitMQ Stream</h1> 
+<p>Live Streaming of messages being consumed and produced by this application...</p>
+
+<div id="thread">
+</div>
+
+<script type="text/javascript">
+
+    // Create a socket
+    var socket = new WebSocket('@@{RabbitMQWebSocket.StreamSocket.index()}');
+    
+    // Display a message
+    var display = function(event) {
+        $('#thread').append('<li>' + event + '</li>');
+        $('#thread').scrollTo('max')
+    }
+    
+    // Message received on the socket
+    socket.onmessage = function(event) {
+    	display(event.data);
+    }
+    
+</script>

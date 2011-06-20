@@ -15,6 +15,6 @@
     <booleanAttribute key="org.eclipse.jdt.launching.DEFAULT_CLASSPATH" value="false"/>
     <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="play.server.Server"/>
     <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="elasticsearch"/>
-    <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Xdebug -Xrunjdwp:transport=dt_socket,address=0,server=y,suspend=n -Dplay.debug=yes -Dplay.id= -Dapplication.path=&quot;${project_loc:elasticsearch}&quot; -Djava.endorsed.dirs=&quot;/Users/felipera/Downloads/play-1.1/framework/endorsed&quot; -javaagent:&quot;/Users/felipera/Downloads/play-1.1/framework/play.jar&quot;"/>
+    <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Xdebug -Xrunjdwp:transport=dt_socket,address=8000,server=y,suspend=n -Dplay.debug=yes -Dplay.id= -Dapplication.path=&quot;${project_loc:elasticsearch}&quot; -Djava.endorsed.dirs=&quot;/Users/felipera/Downloads/play-1.2.1/framework/endorsed&quot; -javaagent:&quot;/Users/felipera/Downloads/play-1.2.1/framework/play-1.2.1.jar&quot;"/>
 </launchConfiguration>
 

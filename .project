@@ -15,5 +15,12 @@
 		<nature>org.eclipse.jdt.core.javanature</nature>
 		<nature>org.playframework.playclipse.playNature</nature>
 	</natures>
-	
+	<linkedResources><link><name>crud</name><type>2</type><location>/Users/felipera/Downloads/play-1.2.1/modules/crud/app</location></link>
+<link><name>conf/crud</name><type>2</type><location>/Users/felipera/Downloads/play-1.2.1/modules/crud/conf</location></link>
+<link><name>public/crud</name><type>2</type><location>/Users/felipera/Downloads/play-1.2.1/modules/crud/public</location></link>
+<link><name>resteasy-1.3.1</name><type>2</type><location>/Users/felipera/development/playframework-elasticsearch/modules/resteasy-1.3.1/app</location></link>
+<link><name>conf/resteasy-1.3.1</name><type>2</type><location>/Users/felipera/development/playframework-elasticsearch/modules/resteasy-1.3.1/conf</location></link>
+<link><name>rabbitmq-0.0.8</name><type>2</type><location>/Users/felipera/development/playframework-elasticsearch/modules/rabbitmq-0.0.8/app</location></link>
+<link><name>conf/rabbitmq-0.0.8</name><type>2</type><location>/Users/felipera/development/playframework-elasticsearch/modules/rabbitmq-0.0.8/conf</location></link>
+</linkedResources>
 </projectDescription>

@@ -1,0 +1,25 @@
+#{extends 'RabbitMQStats/layout.html' /}
+#{set title:'RabbitMQ' /}
+
+<h1>RabbitMQ Stats</h1>
+
+<form action="@{RabbitMQStats.queueStats(queueName)}" method="GET">
+RabbitMQ Queue Name: <input type="text" name="queueName" value="myQueue">
+<br><br>
+<input type="submit" value="RabbitMQ Queue Stats">
+</form>
+
+<hr>
+
+<h1>RabbitMQ Live Stream</h1>
+
+<form action="@{RabbitMQStats.stream()}" method="GET">
+<br><br>
+<input type="submit" value="See Live Stream">
+</form>
+
+<hr>
+
+<h1>Sample Queue</h1>
+
+<li><a href="@{RabbitMQStats.fireSampleQueue()}">Trigger Sample Firehose</a></li>

@@ -1,0 +1,24 @@
+self: play -> elasticsearch 0.0.7
+
+# Application dependencies
+
+require:
+    - play
+    - play -> rabbitmq 0.0.8
+    - play -> crud
+    - org.elasticsearch -> elasticsearch 0.16.2
+    - se.scalablesolutions.akka -> akka-amqp 1.1.2
+    
+    
+repositories:
+    - elasticsearch:
+        type: iBiblio
+        root: "http://oss.sonatype.org/content/repositories/releases/"
+        contains:
+            - org.elasticsearch -> *
+            
+    - akka:
+        type: iBiblio
+        root: "http://akka.io/repository/"
+        contains:
+            - se.scalablesolutions.akka -> *

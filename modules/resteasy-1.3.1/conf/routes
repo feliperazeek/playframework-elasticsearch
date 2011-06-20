@@ -1,0 +1,10 @@
+# This file defines all module routes (Higher priority routes first)
+#
+# import these routes in the main app as :
+# *     /                       module:resteasy-play-module
+#
+# ~~~~
+
+%{ path = play.configuration.getProperty('resteasy.path', '/rest') }%
+
+*     ${path}/{<.*>ignored}                      RESTEasyController.serve

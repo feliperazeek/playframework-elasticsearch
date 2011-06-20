@@ -1,0 +1,10 @@
+#{extends 'main.html' /}
+#{set title:'Home' /}
+
+<h4>Publish Message to Queue</h4>
+
+<form action="@{Application.publish()}" method="GET">
+<input type="text" name="q" value="Hello World">
+<br><br>
+<input type="submit" value="Publish Message">
+</form>

@@ -1,0 +1,92 @@
+<script type="text/javascript" charset="utf-8">
+  $(".add").click(function() {     
+  jQuery.facebox('
+  <form id="new_user_form" action="#/users" method="post">
+    <p><label for="user_name">Username:</label><input type="text" id="user_name" name="user_name" /></p>
+    <p><label for="pass">Password:</label><input type="password" id="pass" name="pass" /></p>
+    <p><input type="submit" value="Add user" /></p>
+  </form>
+  ');
+	
+  	$("form#new_user_form").submit(function() {
+  		var user = $("#user_name").val();
+  		var pass = $("#pass").val();
+  		
+  		var dataString = {"username" : user, "password":pass};
+  		post("/users", {
+  		  data: $.toJSON(dataString),
+  			success: function(data) {
+  				$.facebox.close();
+  				$("#users_list").append('<li id="'+user+'"><div class="remove"><a href="#" rel="'+user+'">'+user+'</a></div></li>');
+  				alert("Added!");
+  			}
+  		});
+  	});
+	 
+  });
+	
+	$(".remove a").click(function() {
+    var user = this.rel;
+	  jQuery.facebox('
+    <form id="update_user_form" action="#/users" method="post">
+      <p>Editing user: '+ user +' </p>
+      <p><label for="password">New password:</label><input type="text" id="password" name="password" /></p>
+      <p><label for="repeat_password">Enter password again:</label><input type="text" id="repeat_password" name="repeat_password" /></p>
+      <p><input type="submit" value="Update user" /></p> 
+    </form>
+    <p>Or delete: '+ user +' </p>
+    <form id="delete_user_form" action="#/users" method="post">
+      <p><input type="submit" value="Delete user" /></p>
+    </form>
+    ');
+    
+    $("form#update_user_form").submit(function() {
+  		var pass = $("#password").val();
+  		var pass2 = $("#repeat_password").val();
+  		
+  		if (pass == pass2) {
+  		  var dataString = {"name" : user, "password" : pass};
+  		  alert("Updating password");
+  		  put("/users/"+user, {
+  		    data: $.toJSON(dataString),
+  		    success: function(data) {}
+  		  })
+  		} else {
+  		  alert("The passwords didn't match. Please re-enter");
+  		};
+    });
+    
+    $("form#delete_user_form").submit(function() {
+      var dataString = {"name" : user};
+      are_you_sure("Are you sure you want to remove "+user, function() {
+        post_delete("/users/"+user, {
+             data: $.toJSON(dataString),
+             success: function(data) {$("td#"+user).remove();}
+           });
+      });
+    });
+    
+	});	
+</script>
+
+<div id="users">
+  
+  <div class="add"><h3>Users</h3></div>
+    
+  <table id="data" class="sexy_table">
+  	<caption>Users</caption>
+  	<thead>
+      <tr>
+        <th>Name</th>
+      </tr>
+  	</thead>
+  	<tbody>
+      <% for ( var i = 0; i < users.length; i++ ) { %>
+        <tr>
+          <td id="<%= users[i] %>"><div class='remove'><a href='#' rel='<%= users[i] %>'><%= users[i] %></a></td>
+        </tr>
+      <% } %>  	</tbody>
+  </table>
+  
+  
+</div>
