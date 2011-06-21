@@ -244,8 +244,15 @@ public class ElasticSearchPlugin extends PlayPlugin {
 		if ((consumerStarted == false) && getDeliveryModel().equals(ElasticSearchDeliveryMode.RABBITMQ)) {
 			// TODO Finish RabbitMQ Integration
 			Logger.info("Triggering RabbitMQConsumer for Elastic Search...");
+			
+			// Exchange
+			akka.amqp.ExchangeType directExchange = akka.amqp.Direct.getInstance();
+			akka.amqp.AMQP.ExchangeParameters params = new akka.amqp.AMQP.ExchangeParameters(getRabbitMQQueue(), directExchange);
+			
+			// Consumer
 			akka.actor.ActorRef ref = akka.actor.Actors.actorOf(RabbitMQConsumerActor.class);
-			akka.amqp.AMQP.newConsumer(ref, null);
+			akka.amqp.AMQP.ConsumerParameters consumerParams = new akka.amqp.AMQP.ConsumerParameters(getRabbitMQQueue(), ref, params);
+			akka.amqp.AMQP.newConsumer(ref, consumerParams);
 			consumerStarted = true;
 		}
 
@@ -275,11 +282,22 @@ public class ElasticSearchPlugin extends PlayPlugin {
 		Logger.info("Elastic Search Index Event: %s", event);
 		if (event != null) {
 			if (getDeliveryModel().equals(ElasticSearchDeliveryMode.RABBITMQ)) {	
-				// TODO Finish RabbitMQ Integration
+				// 
+				
+				// Exchange
 				akka.amqp.ExchangeType directExchange = akka.amqp.Direct.getInstance();
 				akka.amqp.AMQP.ExchangeParameters params = new akka.amqp.AMQP.ExchangeParameters(getRabbitMQQueue(), directExchange);
+				
+				// Producer
 				akka.amqp.AMQP.ProducerParameters producerParams = new akka.amqp.AMQP.ProducerParameters(params);
-				akka.actor.ActorRef connection = akka.amqp.AMQP.newConnection();
+				
+				// Connection
+				com.rabbitmq.client.Address address = new com.rabbitmq.client.Address(Play.configuration.getProperty("elasticsearch.rabbitmq.host"), Integer.valueOf(Play.configuration.getProperty("elasticsearch.rabbitmq.port")));
+				com.rabbitmq.client.Address[] addresses = {address};
+				akka.amqp.AMQP.ConnectionParameters connectionParameters = new akka.amqp.AMQP.ConnectionParameters(addresses, Play.configuration.getProperty("elasticsearch.rabbitmq.username"), Play.configuration.getProperty("elasticsearch.rabbitmq.password"), Play.configuration.getProperty("elasticsearch.rabbitmq.virtualHost"));
+				akka.actor.ActorRef connection = akka.amqp.AMQP.newConnection(connectionParameters);
+				
+				// Send Event
 				akka.actor.ActorRef producer = akka.amqp.AMQP.newProducer(connection, producerParams);
 				producer.sendOneWay(event);
 				
