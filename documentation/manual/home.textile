@@ -92,6 +92,13 @@ public class ElasticSearchExample extends ElasticSearchController {
 You should be able to search on http://localhost:9000/elasticSearchExample/index. If you want to customize the views, just create a directory ELASTIC_SEARCH under views and change whatever you need to change.
 
 
+h2. Simple searching
+
+bc. SearchResults<Post> list = ElasticSearch.search(QueryBuilders.fieldQuery("title", "what a search"), Post.class);
+
+See "Elastic Search documentation":http://www.elasticsearch.org/guide/reference/java-api/search.html for more example. 
+
+
 
 h2. User Interface 
 
