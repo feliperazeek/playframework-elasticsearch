@@ -33,6 +33,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import play.Logger;
+import play.db.jpa.Model;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -336,13 +337,16 @@ public abstract class ReflectionUtil {
 			} else if (fieldClass.equals(Integer.class)) {
 				field.setInt(object, Integer.valueOf((String) value));
 			} else if (fieldClass.equals(Long.class)) {
-				field.setLong(object, Long.valueOf((String) value));
+				if (value instanceof Integer)
+					field.set(object, new Long((Integer)value));
+				else
+					field.setLong(object, Long.valueOf((String) value));
 			} else if (fieldClass.equals(Double.class)) {
 				field.set(object, Double.valueOf((String) value));
 			} else {
 				field.set(object, value);
 			}
-
+			
 		} catch (IllegalArgumentException e) {
 			Logger.error(ExceptionUtil.getStackTrace(e));
 		} catch (IllegalAccessException e) {

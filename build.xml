@@ -3,27 +3,21 @@
 <project name="elasticsearch" default="build" basedir=".">
 
 	<path id="project.classpath">
-		<pathelement path="/Users/felipera/play/framework/classes" />
-		<fileset dir="/Users/felipera/play/framework/lib">
-			<include name="*.jar" />
-		</fileset>
-		<fileset dir="/Users/felipera/play/framework">
+		<pathelement path="${play.path}/framework/classes" />
+		<fileset dir="${play.path}/framework/lib">
 			<include name="*.jar" />
 		</fileset>
 		<fileset dir="lib">
 			<include name="*.jar" />
 		</fileset>
 	</path>
-	
-	<target name="compile">
 
-		<property environment="env" />
-		<property name="play.path" location="/Users/felipera/play" />
-		<condition property="env.PLAY_HOME" value="${env.HOME}/play">
-			<not>
-				<isset property="env.PLAY_HOME" />
-			</not>
-		</condition>
+    <target name="check" unless="play.path">
+        <fail message="Please specify Play framework path using -Dplay.path=/path/to/framework/home" />
+    </target>
+
+	<target name="compile" depends="check">
+
 		<property name="ant.build.javac.source" value="1.6" />
 		<property name="ant.build.javac.target" value="1.6" />
 
@@ -35,7 +29,7 @@
 	</target>
 
 	<target name="build" depends="compile">
-		<echo message="/Users/felipera/play"></echo>
+		<echo message="${play.path}/play"></echo>
 		<copy todir="tmp/classes">
 			<fileset dir="src">
 				<include name="**/*.properties" />
@@ -54,5 +48,9 @@
 		<delete dir="tmp" />
 	</target>
 
+    <target name="clean">
+        <delete dir="tmp"/>
+        <delete dir="modules"/>
+    </target>
 
 </project>
