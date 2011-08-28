@@ -227,11 +227,6 @@ public class ElasticSearchPlugin extends PlayPlugin {
 		// Log Debug
 		Logger.info("Event: %s - Object: %s", message, context);
 
-		// Just accept JPA events
-		if (!StringUtils.startsWith(message, "JPASupport.")) {
-			return;
-		}
-
 		// Check if object has annotation
 		boolean isSearchable = this.isElasticSearchable(context);
 		// Logger.info("Searchable: %s", isSearchable);
@@ -269,11 +264,11 @@ public class ElasticSearchPlugin extends PlayPlugin {
 
 		// Define Event
 		ElasticSearchIndexEvent event = null;
-		if (message.equals("JPASupport.objectPersisted") || message.equals("JPASupport.objectUpdated")) {
+		if (message.endsWith(".objectPersisted") || message.endsWith(".objectUpdated")) {
 			// Index Model
 			event = new ElasticSearchIndexEvent((Model) context, ElasticSearchIndexEvent.Type.INDEX);
 
-		} else if (message.equals("JPASupport.objectDeleted")) {
+		} else if (message.endsWith(".objectDeleted")) {
 			// Delete Model from Index
 			event = new ElasticSearchIndexEvent((Model) context, ElasticSearchIndexEvent.Type.DELETE);
 		}
