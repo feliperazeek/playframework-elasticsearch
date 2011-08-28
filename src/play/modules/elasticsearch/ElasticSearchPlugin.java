@@ -227,6 +227,10 @@ public class ElasticSearchPlugin extends PlayPlugin {
 		// Log Debug
 		Logger.info("Event: %s - Object: %s", message, context);
 
+		if (!message.endsWith(".objectPersisted") || !message.endsWith(".objectUpdated") || !message.endsWith(".objectDeleted")) {
+			return;
+		}
+
 		// Check if object has annotation
 		boolean isSearchable = this.isElasticSearchable(context);
 		// Logger.info("Searchable: %s", isSearchable);
