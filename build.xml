@@ -3,11 +3,11 @@
 <project name="elasticsearch" default="build" basedir=".">
 
 	<path id="project.classpath">
-		<pathelement path="/Users/felipera/play/framework/classes" />
-		<fileset dir="/Users/felipera/play/framework/lib">
+		<pathelement path="${play.path}/framework/classes" />
+		<fileset dir="${play.path}/framework/lib">
 			<include name="*.jar" />
 		</fileset>
-		<fileset dir="/Users/felipera/play/framework">
+		<fileset dir="${play.path}/framework">
 			<include name="*.jar" />
 		</fileset>
 		<fileset dir="lib">
@@ -18,15 +18,11 @@
 	<target name="compile">
 
 		<property environment="env" />
-		<property name="play.path" location="/Users/felipera/play" />
-		<condition property="env.PLAY_HOME" value="${env.HOME}/play">
-			<not>
-				<isset property="env.PLAY_HOME" />
-			</not>
-		</condition>
+		<property name="play.path" location="${play.path}/play" />
 		<property name="ant.build.javac.source" value="1.6" />
 		<property name="ant.build.javac.target" value="1.6" />
 
+		<mkdir dir="lib" />
 		<mkdir dir="tmp/classes" />
 		<javac srcdir="src" destdir="tmp/classes" target="1.6" debug="true"
 			classpathref="project.classpath">
