@@ -327,20 +327,42 @@ public abstract class ReflectionUtil {
 		Class<?> fieldClass = (Class<?>) type;
 
 		try {
-			if (fieldClass.equals(String.class)) {
+			if (fieldClass.equals(value.getClass())) {
+				// Types match
 				field.set(object, value);
-			} else if (fieldClass.equals(BigDecimal.class)) {
-				field.set(object, new BigDecimal((String) value));
-			} else if (fieldClass.equals(Date.class)) {
-				field.set(object, convertToDate(value));
-			} else if (fieldClass.equals(Integer.class)) {
-				field.setInt(object, Integer.valueOf((String) value));
-			} else if (fieldClass.equals(Long.class)) {
-				field.setLong(object, Long.valueOf((String) value));
-			} else if (fieldClass.equals(Double.class)) {
-				field.set(object, Double.valueOf((String) value));
 			} else {
-				field.set(object, value);
+				// Types do not match, perform conversion where needed
+				if (fieldClass.equals(String.class)) {
+					field.set(object, value.toString());
+				} else if (fieldClass.equals(BigDecimal.class)) {
+					field.set(object, new BigDecimal(value.toString()));
+				} else if (fieldClass.equals(Date.class)) {
+					field.set(object, convertToDate(value));
+					
+				// Use Number intermediary where possible
+				} else if (fieldClass.equals(Integer.class)) {
+					if( value instanceof Number ) {
+						field.set(object, Integer.valueOf(((Number)value).intValue()));
+					} else {
+						field.set(object, Integer.valueOf(value.toString()));
+					}
+				} else if (fieldClass.equals(Long.class)) {
+					if( value instanceof Number ) {
+						field.set(object, Long.valueOf(((Number)value).longValue()));
+					} else {
+						field.set(object, Long.valueOf(value.toString()));
+					}
+				} else if (fieldClass.equals(Double.class)) {
+					if( value instanceof Number ) {
+						field.set(object, Double.valueOf(((Number)value).doubleValue()));
+					} else {
+						field.set(object, Double.valueOf(value.toString()));
+					}
+				
+				// Fallback to simply trying to set the field
+				} else {
+					field.set(object, value);
+				}
 			}
 
 		} catch (IllegalArgumentException e) {
