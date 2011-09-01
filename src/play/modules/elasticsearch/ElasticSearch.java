@@ -25,7 +25,9 @@ import play.modules.elasticsearch.transformer.Transformer;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.client.action.search.SearchRequestBuilder;
 import org.elasticsearch.index.query.xcontent.XContentQueryBuilder;
+import org.elasticsearch.search.facet.AbstractFacetBuilder;
 
 import play.Play;
 import play.db.Model;
@@ -60,6 +62,31 @@ public abstract class ElasticSearch {
 	public static <T extends Model> SearchResults search(XContentQueryBuilder queryBuilder, Class<T> clazz) {
 		String index = ElasticSearchAdapter.getIndexName(clazz);
 		SearchResponse searchResponse = client().prepareSearch(index).setSearchType(SearchType.QUERY_THEN_FETCH).setQuery(queryBuilder).execute().actionGet();
+		SearchResults searchResults = Transformer.toSearchResults(searchResponse, clazz);
+		return searchResults;
+	}
+	
+	/**
+	 * Faceted search
+	 * 
+	 * @param <T>
+	 *            the generic type
+	 * @param queryBuilder
+	 *            the query builder
+	 * @param clazz
+	 *            the clazz
+	 * @param facets
+	 *            the facets
+	 * 
+	 * @return the search results
+	 */
+	public static <T extends Model> SearchResults search(XContentQueryBuilder queryBuilder, Class<T> clazz, AbstractFacetBuilder... facets) {
+		String index = ElasticSearchAdapter.getIndexName(clazz);
+		SearchRequestBuilder builder = client().prepareSearch(index).setSearchType(SearchType.QUERY_THEN_FETCH).setQuery(queryBuilder);
+		for( AbstractFacetBuilder facet : facets ) {
+			builder.addFacet(facet);
+		}
+		SearchResponse searchResponse = builder.execute().actionGet();
 		SearchResults searchResults = Transformer.toSearchResults(searchResponse, clazz);
 		return searchResults;
 	}
