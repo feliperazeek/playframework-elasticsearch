@@ -61,6 +61,11 @@ public class JPATransformer {
 			// Fetch JPA entities from database while preserving ES result order
 			objects = loadFromDb(clazz, ids);
 			sortByIds(objects, ids);
+			
+			// Make sure all items exist in the database
+			if( objects.size() != ids.size() ) {
+				throw new IllegalStateException("Please re-index, not all indexed items are available in the database");
+			}
 		} else {
 			objects = Collections.emptyList();
 		}
