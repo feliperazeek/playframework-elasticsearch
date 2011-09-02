@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.SearchHit;
@@ -43,17 +42,12 @@ public class JPATransformer {
 		// Get key information
 		Model.Factory factory = Model.Manager.factoryFor(clazz);
 		Class<?> keyType = factory.keyType();
-		String keyName = factory.keyName();
 
 		// Loop on each one
 		List<Object> ids = new ArrayList<Object>();
 		for (SearchHit h : searchResponse.hits()) {
-			// Get Data Map
-			Map<String, Object> map = h.getSource();
-			Logger.debug("Record Map: %s", map);
-			
 			try {
-				ids.add(Binder.directBind(map.get(keyName).toString(), keyType));
+				ids.add(Binder.directBind(h.getId(), keyType));
 	        } catch (Exception e) {
 	            throw new UnexpectedException("Could not convert the ID from index to corresponding type", e);
 	        }

@@ -30,6 +30,7 @@ import org.elasticsearch.client.action.search.SearchRequestBuilder;
 import org.elasticsearch.index.query.xcontent.XContentQueryBuilder;
 import org.elasticsearch.search.facet.AbstractFacetBuilder;
 
+import play.Logger;
 import play.Play;
 import play.db.Model;
 
@@ -124,6 +125,16 @@ public abstract class ElasticSearch {
 		for( AbstractFacetBuilder facet : facets ) {
 			builder.addFacet(facet);
 		}
+		
+		// Only load id field for hydrate
+		if( hydrate ) {
+			builder.addField("_id");
+		}
+		
+		if( Logger.isDebugEnabled() ) {
+			Logger.debug("ES Query: %s", builder.toString());
+		}
+		
 		SearchResponse searchResponse = builder.execute().actionGet();
 		SearchResults searchResults = null;
 		if( hydrate ) {
