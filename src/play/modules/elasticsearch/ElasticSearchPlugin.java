@@ -250,6 +250,11 @@ public class ElasticSearchPlugin extends PlayPlugin {
 			akka.amqp.AMQP.ExchangeParameters params = new akka.amqp.AMQP.ExchangeParameters(getRabbitMQQueue(), directExchange);
 			
 			// Consumer
+			com.rabbitmq.client.Address address = new com.rabbitmq.client.Address(Play.configuration.getProperty("elasticsearch.rabbitmq.host"), Integer.valueOf(Play.configuration.getProperty("elasticsearch.rabbitmq.port")));
+			com.rabbitmq.client.Address[] addresses = {address};
+			akka.amqp.AMQP.ConnectionParameters connectionParameters = new akka.amqp.AMQP.ConnectionParameters(addresses, Play.configuration.getProperty("elasticsearch.rabbitmq.username"), Play.configuration.getProperty("elasticsearch.rabbitmq.password"), Play.configuration.getProperty("elasticsearch.rabbitmq.virtualHost"));
+			akka.actor.ActorRef connection = akka.amqp.AMQP.newConnection(connectionParameters);
+			
 			akka.actor.ActorRef ref = akka.actor.Actors.actorOf(RabbitMQConsumerActor.class);
 			akka.amqp.AMQP.ConsumerParameters consumerParams = new akka.amqp.AMQP.ConsumerParameters(getRabbitMQQueue(), ref, params);
 			akka.amqp.AMQP.newConsumer(ref, consumerParams);
