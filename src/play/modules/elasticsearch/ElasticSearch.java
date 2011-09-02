@@ -20,6 +20,7 @@ package play.modules.elasticsearch;
 
 import play.modules.elasticsearch.adapter.ElasticSearchAdapter;
 import play.modules.elasticsearch.search.SearchResults;
+import play.modules.elasticsearch.transformer.JPATransformer;
 import play.modules.elasticsearch.transformer.Transformer;
 
 import org.elasticsearch.action.search.SearchResponse;
@@ -47,9 +48,9 @@ public abstract class ElasticSearch {
 		ElasticSearchPlugin plugin = Play.plugin(ElasticSearchPlugin.class);
 		return plugin.client();
 	}
-
+	
 	/**
-	 * Search.
+	 * Build a SearchRequestBuilder
 	 * 
 	 * @param <T>
 	 *            the generic type
@@ -57,17 +58,17 @@ public abstract class ElasticSearch {
 	 *            the query builder
 	 * @param clazz
 	 *            the clazz
-	 * @return the search results
+	 * 
+	 * @return the search request builder
 	 */
-	public static <T extends Model> SearchResults search(XContentQueryBuilder queryBuilder, Class<T> clazz) {
+	private static <T extends Model> SearchRequestBuilder builder(XContentQueryBuilder queryBuilder, Class<T> clazz) {
 		String index = ElasticSearchAdapter.getIndexName(clazz);
-		SearchResponse searchResponse = client().prepareSearch(index).setSearchType(SearchType.QUERY_THEN_FETCH).setQuery(queryBuilder).execute().actionGet();
-		SearchResults searchResults = Transformer.toSearchResults(searchResponse, clazz);
-		return searchResults;
+		SearchRequestBuilder builder = client().prepareSearch(index).setSearchType(SearchType.QUERY_THEN_FETCH).setQuery(queryBuilder);
+		return builder;
 	}
-	
+
 	/**
-	 * Faceted search
+	 * Search with optional facets.
 	 * 
 	 * @param <T>
 	 *            the generic type
@@ -81,13 +82,55 @@ public abstract class ElasticSearch {
 	 * @return the search results
 	 */
 	public static <T extends Model> SearchResults search(XContentQueryBuilder queryBuilder, Class<T> clazz, AbstractFacetBuilder... facets) {
-		String index = ElasticSearchAdapter.getIndexName(clazz);
-		SearchRequestBuilder builder = client().prepareSearch(index).setSearchType(SearchType.QUERY_THEN_FETCH).setQuery(queryBuilder);
+		return search(queryBuilder, clazz, false, facets);
+	}
+	
+	/**
+	 * Search with optional facets. Hydrates entities
+	 * 
+	 * @param <T>
+	 *            the generic type
+	 * @param queryBuilder
+	 *            the query builder
+	 * @param clazz
+	 *            the clazz
+	 * @param facets
+	 *            the facets
+	 * 
+	 * @return the search results
+	 */
+	public static <T extends Model> SearchResults searchAndHydrate(XContentQueryBuilder queryBuilder, Class<T> clazz, AbstractFacetBuilder... facets) {
+		return search(queryBuilder, clazz, true, facets);
+	}
+	
+	/**
+	 * Faceted search, hydrates entities if asked to do so.
+	 * 
+	 * @param <T>
+	 *            the generic type
+	 * @param queryBuilder
+	 *            the query builder
+	 * @param clazz
+	 *            the clazz
+	 * @param hydrate
+	 * 			  hydrate JPA entities
+	 * @param facets
+	 *            the facets
+	 * 
+	 * @return the search results
+	 */
+	private static <T extends Model> SearchResults search(XContentQueryBuilder queryBuilder, Class<T> clazz, boolean hydrate, AbstractFacetBuilder... facets) {
+		SearchRequestBuilder builder = builder(queryBuilder, clazz);
 		for( AbstractFacetBuilder facet : facets ) {
 			builder.addFacet(facet);
 		}
 		SearchResponse searchResponse = builder.execute().actionGet();
-		SearchResults searchResults = Transformer.toSearchResults(searchResponse, clazz);
+		SearchResults searchResults = null;
+		if( hydrate ) {
+			searchResults = JPATransformer.toSearchResults(searchResponse, clazz);
+		} else {
+			searchResults = Transformer.toSearchResults(searchResponse, clazz);
+		}
 		return searchResults;
 	}
 
