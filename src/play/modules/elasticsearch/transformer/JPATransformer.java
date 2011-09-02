@@ -59,7 +59,7 @@ public class JPATransformer {
 	        }
 		}
 		
-		Logger.info("Model IDs returned by ES: %s", ids);
+		Logger.debug("Model IDs returned by ES: %s", ids);
 
 		List<T> objects = null;
 		
@@ -71,7 +71,7 @@ public class JPATransformer {
 			objects = Collections.emptyList();
 		}
 		
-		Logger.info("Models after sorting: %s", objects);
+		Logger.debug("Models after sorting: %s", objects);
 
 		// Return Results
 		return new SearchResults(count, objects, searchResponse.facets());
