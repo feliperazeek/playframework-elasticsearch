@@ -67,6 +67,22 @@ public abstract class ElasticSearch {
 		SearchRequestBuilder builder = client().prepareSearch(index).setSearchType(SearchType.QUERY_THEN_FETCH).setQuery(queryBuilder);
 		return builder;
 	}
+	
+	/**
+	 * Build a Query
+	 * 
+	 * @param <T>
+	 *            the generic type
+	 * @param queryBuilder
+	 *            the query builder
+	 * @param clazz
+	 *            the clazz
+	 * 
+	 * @return the query
+	 */
+	public static <T extends Model> Query query(XContentQueryBuilder queryBuilder, Class<T> clazz) {
+		return new Query(clazz, builder(queryBuilder, clazz));
+	}
 
 	/**
 	 * Search with optional facets.
