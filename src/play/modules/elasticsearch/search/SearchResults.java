@@ -20,6 +20,8 @@ package play.modules.elasticsearch.search;
 
 import java.util.List;
 
+import org.elasticsearch.search.facet.Facets;
+
 import play.db.Model;
 
 /**
@@ -34,16 +36,21 @@ public class SearchResults<T extends Model> {
 
 	/** The objects. */
 	public List<T> objects;
+	
+	/** The facets. */
+	public Facets facets;
 
 	/**
 	 * Instantiates a new search results.
 	 *
 	 * @param totalCount the total count
 	 * @param objects the objects
+	 * @param facets the facets
 	 */
-	public SearchResults(long totalCount, List<T> objects) {
+	public SearchResults(long totalCount, List<T> objects, Facets facets) {
 		this.totalCount = totalCount;
 		this.objects = objects;
+		this.facets = facets;
 	}
 
 }
