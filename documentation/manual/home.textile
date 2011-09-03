@@ -1,7 +1,7 @@
 
 h1. Play Framework - Elastic Search Module
 
-by *Felipe Oliveira [@_felipera]*
+by Felipe Oliveira [@_felipera]
 
 Searching is hard, just ask Google! Thankfully Lucene came about to provide incredible searching capabilities to the Java community. I have personally been using Lucene since 1999 and I am a huge fan, probably my very favorite Java project ever.
 
