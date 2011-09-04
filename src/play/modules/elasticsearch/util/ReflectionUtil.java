@@ -264,16 +264,12 @@ public abstract class ReflectionUtil {
 		String className = clazz.getName() + ".";
 		List<String> fieldNames = new ArrayList<String>();
 
-		// Get all the fields including superclasses
-		while (clazz != null) {
-			Field[] fields = clazz.getDeclaredFields();
-			for (Field field : fields) {
-				if (!field.isAnnotationPresent(annotationClass)) {
-					fieldNames.add(className + field.getName());
-				}
+		for (Field field : getAllFields(clazz)) {
+			if (!field.isAnnotationPresent(annotationClass)) {
+				fieldNames.add(className + field.getName());
 			}
-			clazz = clazz.getSuperclass();
 		}
+		
 		return fieldNames;
 	}
 
@@ -285,19 +281,15 @@ public abstract class ReflectionUtil {
 	 * @return the all fields without annotation
 	 */
 	public static List<Field> getAllFieldsWithoutAnnotation(Class<?> clazz, Class<? extends Annotation> annotationClass) {
-		List<Field> list = new ArrayList<Field>();
+		List<Field> fieldsWithoutAnnotation = new ArrayList<Field>();
 
-		// Get all the fields including superclasses
-		while (clazz != null) {
-			Field[] fields = clazz.getDeclaredFields();
-			for (Field field : fields) {
-				if (!field.isAnnotationPresent(annotationClass)) {
-					list.add(field);
-				}
+		for (Field field : getAllFields(clazz)) {
+			if (!field.isAnnotationPresent(annotationClass)) {
+				fieldsWithoutAnnotation.add(field);
 			}
-			clazz = clazz.getSuperclass();
 		}
-		return list;
+		
+		return fieldsWithoutAnnotation;
 	}
 
 	/**
