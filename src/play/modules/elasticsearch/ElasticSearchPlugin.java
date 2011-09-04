@@ -54,6 +54,9 @@ public class ElasticSearchPlugin extends PlayPlugin {
 
 	/** Flag that indicates if the consumer has been started */
 	private static boolean consumerStarted = false;
+	
+	/** Flag that indicates if the indexer has been started */
+	private static boolean indexerStarted = false;
 
 	/** The model index. */
 	private static Map<Class<?>, Boolean> modelIndex = null;
@@ -216,6 +219,10 @@ public class ElasticSearchPlugin extends PlayPlugin {
 		}
 		return false;
 	}
+	
+	static void markIndexerStarted() {
+		indexerStarted = true;
+	}
 
 	/**
 	 * This is the method that will be sending data to ES instance
@@ -303,6 +310,10 @@ public class ElasticSearchPlugin extends PlayPlugin {
 				producer.sendOneWay(event);
 				
 			} else {
+				if(indexerStarted == false) {
+					new ElasticSearchIndexer().now();
+					indexerStarted = true;
+				}
 				ElasticSearchIndexer.stream.publish(event);
 			}
 		}
