@@ -1,4 +1,4 @@
-%{ nbPages = _caller.count.page(controllers.ElasticSearchController.getPageSize()) }%
+%{ nbPages = _caller.count.page(controllers.elasticsearch.ElasticSearchController.getPageSize()) }%
 
 <p class="elasticsearchCount">
     &{'elasticsearch.search.size', _caller.count, _caller.type.name}
