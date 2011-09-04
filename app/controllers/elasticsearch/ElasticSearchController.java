@@ -18,6 +18,9 @@
  */
 package controllers.elasticsearch;
 
+import static org.elasticsearch.index.query.xcontent.QueryBuilders.boolQuery;
+import static org.elasticsearch.index.query.xcontent.QueryBuilders.wildcardQuery;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -26,9 +29,12 @@ import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+
+import org.elasticsearch.common.base.Strings;
+import org.elasticsearch.index.query.xcontent.BoolQueryBuilder;
+import org.elasticsearch.index.query.xcontent.QueryBuilders;
 
 import play.Play;
 import play.data.validation.MaxSize;
@@ -36,6 +42,9 @@ import play.data.validation.Password;
 import play.data.validation.Required;
 import play.db.Model;
 import play.exceptions.TemplateNotFoundException;
+import play.modules.elasticsearch.ElasticSearch;
+import play.modules.elasticsearch.Query;
+import play.modules.elasticsearch.search.SearchResults;
 import play.mvc.Before;
 import play.mvc.Controller;
 import play.mvc.Router;
@@ -84,8 +93,9 @@ public class ElasticSearchController extends Controller {
 		if (page < 1) {
 			page = 1;
 		}
-		List<Model> objects = type.findPage(page, search, searchFields, orderBy, order, (String) request.args.get("where"));
-		Long count = type.count(search, searchFields, (String) request.args.get("where"));
+		SearchResults<Model> results = type.findPage(page, search, searchFields, orderBy, order, (String) request.args.get("where"));
+		List<Model> objects = results.objects;
+		Long count = results.totalCount;
 		Long totalCount = type.count(null, null, (String) request.args.get("where"));
 		try {
 			render(type, objects, count, totalCount, page, orderBy, order);
@@ -296,6 +306,27 @@ public class ElasticSearchController extends Controller {
 		public Object getBlankAction() {
 			return Router.reverse(controllerClass.getName().replace("$", "") + ".blank");
 		}
+		
+		/**
+		 * Builds a query which searches ES with the given search criteria
+		 * 
+		 * @param search the search
+		 * @param searchFields the searchfields
+		 * @param where the where
+		 * @return the builder
+		 */
+		private BoolQueryBuilder buildQueryBuilder(String search, String searchFields, String where) {
+			BoolQueryBuilder qb = boolQuery();
+			
+			if( Strings.isNullOrEmpty(search)) {
+				qb.must(QueryBuilders.matchAllQuery());
+			} else {
+				// FIXME Currently we search in all fields and ignore searchFields
+				qb.must(wildcardQuery("_all", "*" + search + "*"));
+			}
+			
+			return qb;
+		}
 
 		/**
 		 * Count.
@@ -306,7 +337,12 @@ public class ElasticSearchController extends Controller {
 		 * @return the long
 		 */
 		public Long count(String search, String searchFields, String where) {
-			return Model.Manager.factoryFor(entityClass).count(searchFields == null ? new ArrayList<String>() : Arrays.asList(searchFields.split("[ ]")), search, where);
+			BoolQueryBuilder qb = buildQueryBuilder(search, searchFields, where);			
+			Query<?> query = ElasticSearch.query(qb, entityClass);
+			query.from(0).size(0);
+			SearchResults<?> result = query.fetch();
+			
+			return result.totalCount;
 		}
 
 		/**
@@ -321,8 +357,14 @@ public class ElasticSearchController extends Controller {
 		 * @return the list
 		 */
 		@SuppressWarnings("unchecked")
-		public List<Model> findPage(int page, String search, String searchFields, String orderBy, String order, String where) {
-			return Model.Manager.factoryFor(entityClass).fetch((page - 1) * getPageSize(), getPageSize(), orderBy, order, searchFields == null ? new ArrayList<String>() : Arrays.asList(searchFields.split("[ ]")), search, where);
+		public SearchResults<Model> findPage(int page, String search, String searchFields, String orderBy, String order, String where) {
+			BoolQueryBuilder qb = buildQueryBuilder(search, searchFields, where);			
+			Query<Model> query = ElasticSearch.query(qb, entityClass);
+			// FIXME Currently we ignore the orderBy and order fields
+			query.from((page - 1) * getPageSize()).size(getPageSize());
+			query.hydrate(true);
+			
+			return query.fetch();
 		}
 
 		/**
