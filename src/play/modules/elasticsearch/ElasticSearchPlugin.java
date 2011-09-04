@@ -225,11 +225,13 @@ public class ElasticSearchPlugin extends PlayPlugin {
 	@Override
 	public void onEvent(String message, Object context) {
 		// Log Debug
-		Logger.info("Event: %s - Object: %s", message, context);
+		Logger.info("Received %s Event, Object: %s", message, context);
 
-		if (!message.endsWith(".objectPersisted") || !message.endsWith(".objectUpdated") || !message.endsWith(".objectDeleted")) {
+		if (!message.endsWith(".objectPersisted") && !message.endsWith(".objectUpdated") && !message.endsWith(".objectDeleted")) {
 			return;
 		}
+		
+		Logger.debug("Processing %s Event", message);
 
 		// Check if object has annotation
 		boolean isSearchable = this.isElasticSearchable(context);
