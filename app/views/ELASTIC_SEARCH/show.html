@@ -1,4 +1,4 @@
-#{extends 'CRUD/layout.html' /}
+#{extends 'ELASTIC_SEARCH/layout.html' /}
 
 <div id="elasticsearchShow" class="${type.name}">
 	
@@ -6,16 +6,8 @@
 	
 	<div class="objectGrid">
 %{
-    if(_object) {
-        currentObject = _object
-        currentType = _('controllers.elasticsearch$ObjectType').forClass(_object.getClass().getName())
-    } else if(_class) {
-        currentObject = null;
-        currentType = _('controllers.elasticsearch$ObjectType').forClass(_class)
-    } else {
-        currentObject = _caller.object
-        currentType = _caller.type
-    }
+    currentObject = object
+    currentType = _('controllers.elasticsearch.ElasticSearchController$ObjectType').forClass(object.getClass().getName())
 
     // Eval fields tags
     def fieldsHandler = [:]

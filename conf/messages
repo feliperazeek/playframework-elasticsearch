@@ -3,7 +3,7 @@
 # For exemple, for french create a messages.fr file
 
 #elasticsearch.name=elasticsearch
-elasticsearch.title=Elastic Search
+elasticsearch.title=Elastic Search for %s
 elasticsearch.home=Home
 elasticsearch.blank=New
 elasticsearch.index.title=Choose the object to edit
