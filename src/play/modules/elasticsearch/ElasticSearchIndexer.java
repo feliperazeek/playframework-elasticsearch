@@ -20,15 +20,20 @@ package play.modules.elasticsearch;
 
 import play.modules.elasticsearch.util.ExceptionUtil;
 import play.Logger;
+import play.db.jpa.NoTransaction;
 import play.jobs.Job;
 import play.jobs.OnApplicationStart;
 import play.libs.F.Promise;
 
 /**
- * The Class ElasticSearchIndexer.
+ * Indexer job.
+ * 
+ * <p>The indexing process runs in a separate thread
+ * <p>The {@link NoTransaction} annotation prevents the JPAPlugin from creating a hibernate session, 
+ * which would remain open for as long as this job is active
  */
-@OnApplicationStart(async = true)
-public class ElasticSearchIndexer extends Job<ElasticSearchIndexAction> {
+@NoTransaction
+public class ElasticSearchIndexer extends Job<Void> {
 
 	/** Index Stream */
 	public static play.libs.F.EventStream<ElasticSearchIndexEvent> stream = new play.libs.F.EventStream<ElasticSearchIndexEvent>();
@@ -39,6 +44,9 @@ public class ElasticSearchIndexer extends Job<ElasticSearchIndexAction> {
 	 */
 	@Override
 	public void doJob() {
+		// In case Play starts this job, we don't need to start it again
+		ElasticSearchPlugin.markIndexerStarted();
+
 		while (true) {
 			try {
 				Promise<ElasticSearchIndexEvent> promise = ElasticSearchIndexer.stream.nextEvent();

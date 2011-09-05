@@ -18,12 +18,10 @@
  */
 package play.modules.elasticsearch.adapter;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-
-import play.modules.elasticsearch.annotations.ElasticSearchIgnore;
-import play.modules.elasticsearch.util.ExceptionUtil;
-import play.modules.elasticsearch.util.ReflectionUtil;
 
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
@@ -37,13 +35,17 @@ import org.elasticsearch.indices.IndexAlreadyExistsException;
 
 import play.Logger;
 import play.db.Model;
+import play.modules.elasticsearch.annotations.ElasticSearchEmbedded;
+import play.modules.elasticsearch.annotations.ElasticSearchIgnore;
+import play.modules.elasticsearch.util.ExceptionUtil;
+import play.modules.elasticsearch.util.ReflectionUtil;
 
 /**
  * The Class ElasticSearchAdapter.
  */
 public abstract class ElasticSearchAdapter {
 
-	/** The IGNOR e_ fields. */
+	/** The play-specific fields to ignore. */
 	private static List<String> IGNORE_FIELDS = new ArrayList<String>();
 	static {
 		IGNORE_FIELDS.add("avoidCascadeSaveLoops");
@@ -111,8 +113,7 @@ public abstract class ElasticSearchAdapter {
 	 *             the exception
 	 */
 	public static <T extends Model> void indexModel(Client client, T model) throws Exception {
-		// Log Debug
-		Logger.debug("Start Index Model: %s", model);
+		Logger.debug("Index Model: %s", model);
 
 		// Check Client
 		if (client == null) {
@@ -129,23 +130,8 @@ public abstract class ElasticSearchAdapter {
 			String indexName = getIndexName(model);
 			Logger.debug("Index Name: %s", indexName);
 
-			// Get list fields that should not be ignored (@ElasticSearchIgnore)
-			List<String> fields = ReflectionUtil.getAllFieldNamesWithoutAnnotation(model.getClass(), ElasticSearchIgnore.class);
 			contentBuilder = XContentFactory.jsonBuilder().startObject();
-
-			// Loop into each field
-			for (String name : fields) {
-				name = name.replaceFirst(model.getClass().getCanonicalName() + ".", "");
-				if (StringUtils.isNotBlank(name) && (IGNORE_FIELDS.contains(name) == false)) {
-					Object value = ReflectionUtil.getFieldValue(model, name);
-					if (value != null) {
-						Logger.debug("Field: " + name + ", Value: " + value);
-						contentBuilder = contentBuilder.field(name, value);
-					} else {
-						Logger.debug("No Value for Field: " + name);
-					}
-				}
-			}
+			addModelToDocument(model, getFieldsToIndex(model.getClass()), "", contentBuilder, 0);
 			contentBuilder = contentBuilder.endObject().prettyPrint();
 			IndexResponse response = client.prepareIndex(indexName, indexName, model._key().toString()).setSource(contentBuilder).execute().actionGet();
 
@@ -155,6 +141,110 @@ public abstract class ElasticSearchAdapter {
 		} finally {
 			if (contentBuilder != null) {
 				contentBuilder.close();
+			}
+		}
+	}
+	
+	/**
+	 * Get a list of fields to index
+	 * 
+	 * @param clazz the clazz
+	 * @return the fields to index
+	 */
+	private static List<Field> getFieldsToIndex(Class<?> clazz) {
+		// Get list of fields that should not be ignored (@ElasticSearchIgnore)
+		List<Field> indexableFields = ReflectionUtil.getAllFieldsWithoutAnnotation(clazz, ElasticSearchIgnore.class);
+		List<Field> fieldsToIndex = new ArrayList<Field>();
+		
+		for (Field field : indexableFields) {
+			String name = field.getName();
+			
+			// Exclude fields on our ignore list
+			if (StringUtils.isNotBlank(name) && (IGNORE_FIELDS.contains(name) == false)) {
+				fieldsToIndex.add(field);
+			}
+		}
+		
+		return fieldsToIndex;
+	}
+	
+	/**
+	 * Get a list of fields to index
+	 * 
+	 * @param clazz the clazz
+	 * @param embedded the annotation which specifies the fields to embed
+	 * @return the fields to index
+	 */
+	private static List<Field> getFieldsToIndex(Class<?> clazz, ElasticSearchEmbedded embedded) {
+		
+		// Shortcut for case where no fields are specified
+		if( embedded.fields().length == 0 ) {
+			return getFieldsToIndex(clazz);
+		}
+		
+		List<Field> indexableFields = ReflectionUtil.getAllFields(clazz);
+		List<String> selectedFields = Arrays.asList(embedded.fields());
+		List<Field> fieldsToIndex = new ArrayList<Field>();
+		
+		for (Field field : indexableFields) {
+			String name = field.getName();
+			
+			// Exclude fields on our ignore list
+			if (StringUtils.isNotBlank(name) && (IGNORE_FIELDS.contains(name) == false)) {
+				
+				// Include fields specified on the ElasticSearchEmbedded annotation
+				if( selectedFields.contains(name) ) {
+					fieldsToIndex.add(field);
+				}
+			}
+		}
+		
+		if( selectedFields.size() != fieldsToIndex.size() ) {
+			Logger.warn("Not all fields specified in ElasticSearchEmbedded could be found (model: %s, fields: %s)", clazz, selectedFields);
+		}
+		
+		return fieldsToIndex;
+	}
+	
+	/**
+	 * Adds a model to the search document, tracking embedded models
+	 * 
+	 * @param model the model to add
+	 * @param fieldsToInclude the fields to index, or null if all fields should be indexed
+	 * @param prefix the prefix to prepend to the field names
+	 * @param contentBuilder the content builder
+	 * @param depth the current recursion depth
+	 */
+	private static void addModelToDocument(Object model, List<Field> fieldsToInclude, String prefix, XContentBuilder contentBuilder, int depth) throws Exception {
+		
+		if (depth > 2) {
+			Logger.warn("3-level recursion detected, ignoring further recursion");
+			return;
+		}
+
+		// Loop into each field
+		for (Field field : fieldsToInclude) {
+			String name = field.getName();
+			Object value = ReflectionUtil.getFieldValue(model, name);
+			
+			if (value != null) {
+				
+				// Check if this is an embedded object
+				if (field.isAnnotationPresent(ElasticSearchEmbedded.class)) {
+					Logger.info("Field: %s%s will be embedded", prefix, name);
+					
+					ElasticSearchEmbedded embedded = field.getAnnotation(ElasticSearchEmbedded.class);
+					List<Field> embeddedFields = getFieldsToIndex(value.getClass(), embedded);
+					String embeddedPrefix = prefix + name + ".";
+					
+					addModelToDocument(value, embeddedFields, embeddedPrefix, contentBuilder, depth++);
+				} else {
+					// Plain field
+					Logger.debug("Field: %s%s, Value: %s", prefix, name, value);
+					contentBuilder.field(prefix + name, value);
+				}
+			} else {
+				Logger.debug("No Value for Field: " + name);
 			}
 		}
 	}
