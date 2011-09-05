@@ -102,6 +102,24 @@ public abstract class ReflectionUtil {
 		// Return List
 		return unmodifiableFields;
 	}
+	
+	/**
+	 * Gets the field value.
+	 *
+	 * @param object the object
+	 * @param field the field
+	 * @return the field value
+	 */
+	public static Object getFieldValue(Object object, Field field) {
+		try {
+			field.setAccessible(true);
+			return field.get(object);
+		} catch (Exception e) {
+			Logger.warn(ExceptionUtil.getStackTrace(e));
+			// throw new RuntimeException( e );
+		}
+		return null;
+	}
 
 	/**
 	 * Gets the field value.
@@ -214,22 +232,14 @@ public abstract class ReflectionUtil {
 			throw new RuntimeException(e);
 		}
 	}
-
-	/**
-	 * Gets the field names with annotation.
-	 *
-	 * @param mainClass the main class
-	 * @param annotationClass the annotation class
-	 * @return the field names with annotation
-	 */
-	public static List<String> getFieldNamesWithAnnotation(Class<?> mainClass, Class<? extends Annotation> annotationClass) {
-
+	
+	private static AnnotationFieldsHolder getAnnotationHolder(Class<?> mainClass, Class<? extends Annotation> annotationClass) {
 		final ClassAnnotationHolder holder = new ClassAnnotationHolder(mainClass, annotationClass);
 
 		// get from cache, if present
 		if (annotationFieldsCache.containsKey(holder)) {
 			AnnotationFieldsHolder fieldHolder = annotationFieldsCache.get(holder);
-			return fieldHolder.getFieldNames();
+			return fieldHolder;
 		}
 
 		// Init List
@@ -250,7 +260,33 @@ public abstract class ReflectionUtil {
 		annotationFieldsCache.put(holder, fieldHolder);
 
 		// Return List
-		return fieldHolder.getFieldNames();
+		return fieldHolder;
+	}
+	
+	/**
+	 * Gets the fields with annotation.
+	 *
+	 * @param mainClass the main class
+	 * @param annotationClass the annotation class
+	 * @return the fields with annotation
+	 */
+	public static List<Field> getFieldsWithAnnotation(Class<?> mainClass, Class<? extends Annotation> annotationClass) {
+
+		final AnnotationFieldsHolder holder = getAnnotationHolder(mainClass, annotationClass);
+		return holder.getFields();
+	}
+
+	/**
+	 * Gets the field names with annotation.
+	 *
+	 * @param mainClass the main class
+	 * @param annotationClass the annotation class
+	 * @return the field names with annotation
+	 */
+	public static List<String> getFieldNamesWithAnnotation(Class<?> mainClass, Class<? extends Annotation> annotationClass) {
+
+		final AnnotationFieldsHolder holder = getAnnotationHolder(mainClass, annotationClass);
+		return holder.getFieldNames();
 	}
 
 	/**
@@ -264,16 +300,12 @@ public abstract class ReflectionUtil {
 		String className = clazz.getName() + ".";
 		List<String> fieldNames = new ArrayList<String>();
 
-		// Get all the fields including superclasses
-		while (clazz != null) {
-			Field[] fields = clazz.getDeclaredFields();
-			for (Field field : fields) {
-				if (!field.isAnnotationPresent(annotationClass)) {
-					fieldNames.add(className + field.getName());
-				}
+		for (Field field : getAllFields(clazz)) {
+			if (!field.isAnnotationPresent(annotationClass)) {
+				fieldNames.add(className + field.getName());
 			}
-			clazz = clazz.getSuperclass();
 		}
+		
 		return fieldNames;
 	}
 
@@ -285,19 +317,15 @@ public abstract class ReflectionUtil {
 	 * @return the all fields without annotation
 	 */
 	public static List<Field> getAllFieldsWithoutAnnotation(Class<?> clazz, Class<? extends Annotation> annotationClass) {
-		List<Field> list = new ArrayList<Field>();
+		List<Field> fieldsWithoutAnnotation = new ArrayList<Field>();
 
-		// Get all the fields including superclasses
-		while (clazz != null) {
-			Field[] fields = clazz.getDeclaredFields();
-			for (Field field : fields) {
-				if (!field.isAnnotationPresent(annotationClass)) {
-					list.add(field);
-				}
+		for (Field field : getAllFields(clazz)) {
+			if (!field.isAnnotationPresent(annotationClass)) {
+				fieldsWithoutAnnotation.add(field);
 			}
-			clazz = clazz.getSuperclass();
 		}
-		return list;
+		
+		return fieldsWithoutAnnotation;
 	}
 
 	/**
@@ -616,7 +644,6 @@ public abstract class ReflectionUtil {
 		 *
 		 * @return the fields
 		 */
-		@SuppressWarnings("unused")
 		public List<Field> getFields() {
 			return fields;
 		}

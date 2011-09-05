@@ -54,6 +54,9 @@ public class ElasticSearchPlugin extends PlayPlugin {
 
 	/** Flag that indicates if the consumer has been started */
 	private static boolean consumerStarted = false;
+	
+	/** Flag that indicates if the indexer has been started */
+	private static boolean indexerStarted = false;
 
 	/** The model index. */
 	private static Map<Class<?>, Boolean> modelIndex = null;
@@ -216,6 +219,10 @@ public class ElasticSearchPlugin extends PlayPlugin {
 		}
 		return false;
 	}
+	
+	static void markIndexerStarted() {
+		indexerStarted = true;
+	}
 
 	/**
 	 * This is the method that will be sending data to ES instance
@@ -225,11 +232,13 @@ public class ElasticSearchPlugin extends PlayPlugin {
 	@Override
 	public void onEvent(String message, Object context) {
 		// Log Debug
-		Logger.info("Event: %s - Object: %s", message, context);
+		Logger.info("Received %s Event, Object: %s", message, context);
 
-		if (!message.endsWith(".objectPersisted") || !message.endsWith(".objectUpdated") || !message.endsWith(".objectDeleted")) {
+		if (!message.endsWith(".objectPersisted") && !message.endsWith(".objectUpdated") && !message.endsWith(".objectDeleted")) {
 			return;
 		}
+		
+		Logger.debug("Processing %s Event", message);
 
 		// Check if object has annotation
 		boolean isSearchable = this.isElasticSearchable(context);
@@ -306,6 +315,10 @@ public class ElasticSearchPlugin extends PlayPlugin {
 				producer.sendOneWay(event);
 				
 			} else {
+				if(indexerStarted == false) {
+					new ElasticSearchIndexer().now();
+					indexerStarted = true;
+				}
 				ElasticSearchIndexer.stream.publish(event);
 			}
 		}

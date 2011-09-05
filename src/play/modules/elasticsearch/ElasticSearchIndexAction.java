@@ -35,17 +35,17 @@ public class ElasticSearchIndexAction implements play.libs.F.Action<ElasticSearc
 	@Override
 	public void invoke(ElasticSearchIndexEvent message) {
 		// Log Debug
-		Logger.info("Elastic Search - " + message + " Event for: " + message);
+		Logger.info("Elastic Search - %s Event", message);
 
 		// Index Event
 		try {
-			if (message.getType().equals(ElasticSearchIndexEvent.Type.INDEX)) {
-				// Index Model
-				ElasticSearchAdapter.indexModel(ElasticSearchPlugin.client(), message.getObject());
-
-			} else if (message.getType().equals(ElasticSearchIndexEvent.Type.DELETE)) {
-				// Delete Model fromIndex
-				ElasticSearchAdapter.deleteModel(ElasticSearchPlugin.client(), message.getObject());
+			switch(message.getType()) {
+				case INDEX:
+					ElasticSearchAdapter.indexModel(ElasticSearchPlugin.client(), message.getObject());
+					break;
+				case DELETE:
+					ElasticSearchAdapter.deleteModel(ElasticSearchPlugin.client(), message.getObject());
+					break;
 			}
 		} catch (Throwable t) {
 			Logger.error(ExceptionUtil.getStackTrace(t));
