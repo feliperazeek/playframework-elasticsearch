@@ -27,7 +27,7 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.action.search.SearchRequestBuilder;
-import org.elasticsearch.index.query.xcontent.XContentQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.facet.AbstractFacetBuilder;
 
 import play.Logger;
@@ -62,7 +62,7 @@ public abstract class ElasticSearch {
 	 * 
 	 * @return the search request builder
 	 */
-	private static <T extends Model> SearchRequestBuilder builder(XContentQueryBuilder queryBuilder, Class<T> clazz) {
+	private static <T extends Model> SearchRequestBuilder builder(QueryBuilder queryBuilder, Class<T> clazz) {
 		String index = ElasticSearchAdapter.getIndexName(clazz);
 		SearchRequestBuilder builder = client().prepareSearch(index).setSearchType(SearchType.QUERY_THEN_FETCH).setQuery(queryBuilder);
 		return builder;
@@ -80,7 +80,7 @@ public abstract class ElasticSearch {
 	 * 
 	 * @return the query
 	 */
-	public static <T extends Model> Query query(XContentQueryBuilder queryBuilder, Class<T> clazz) {
+	public static <T extends Model> Query query(QueryBuilder queryBuilder, Class<T> clazz) {
 		return new Query(clazz, builder(queryBuilder, clazz));
 	}
 
@@ -98,7 +98,7 @@ public abstract class ElasticSearch {
 	 * 
 	 * @return the search results
 	 */
-	public static <T extends Model> SearchResults search(XContentQueryBuilder queryBuilder, Class<T> clazz, AbstractFacetBuilder... facets) {
+	public static <T extends Model> SearchResults search(QueryBuilder queryBuilder, Class<T> clazz, AbstractFacetBuilder... facets) {
 		return search(queryBuilder, clazz, false, facets);
 	}
 	
@@ -116,7 +116,7 @@ public abstract class ElasticSearch {
 	 * 
 	 * @return the search results
 	 */
-	public static <T extends Model> SearchResults searchAndHydrate(XContentQueryBuilder queryBuilder, Class<T> clazz, AbstractFacetBuilder... facets) {
+	public static <T extends Model> SearchResults searchAndHydrate(QueryBuilder queryBuilder, Class<T> clazz, AbstractFacetBuilder... facets) {
 		return search(queryBuilder, clazz, true, facets);
 	}
 	
@@ -136,7 +136,7 @@ public abstract class ElasticSearch {
 	 * 
 	 * @return the search results
 	 */
-	private static <T extends Model> SearchResults search(XContentQueryBuilder queryBuilder, Class<T> clazz, boolean hydrate, AbstractFacetBuilder... facets) {
+	private static <T extends Model> SearchResults search(QueryBuilder queryBuilder, Class<T> clazz, boolean hydrate, AbstractFacetBuilder... facets) {
 		SearchRequestBuilder builder = builder(queryBuilder, clazz);
 		for( AbstractFacetBuilder facet : facets ) {
 			builder.addFacet(facet);

@@ -5,7 +5,7 @@ self: play -> elasticsearch 0.1
 require:
     - play
     - play -> crud
-    - org.elasticsearch -> elasticsearch 0.16.2
+    - org.elasticsearch -> elasticsearch 0.17.6
     - se.scalablesolutions.akka -> akka-amqp 1.1.2
     
     
