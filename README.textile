@@ -44,15 +44,15 @@ h2. Install the module
 
 Install the elasticsearch module from the modules repository:
 
-@play install elasticsearch@
+bc. play install elasticsearch
 
 
 
 h2. Enable the module
 
-After installing the module, add the following to your application.conf to enable it:
+After installing the module, add the following to your conf/dependencies.yml to enable it (don't forget to run play dependencies):
 
-@module.elasticsearch=${play.path}/modules/elasticsearch-0.0.6@
+bc. - play -> elasticsearch 0.0.9
 
 
 
@@ -60,12 +60,12 @@ h2. Configure the module
 
 You need to configure the module by setting these properties in your application.conf. There are two ways to run your Play! app with Elastic Search, local mode or client mode. Local mode works well for development purposes, an Elastic Search instance will run on the same JVM as your Play! application automatically. You won't need to setup another service, etc. The second option is client mode which fits better in a production environment. The default option is local mode.
 
-				@# Option 1) Elastic Search (Local Model)
-				elasticsearch.local=true@
+bc.. # Option 1) Elastic Search (Local Model)
+elasticsearch.local=true
 
-				@# Option 2) Elastic Search (Client Model)
-				elasticsearch.local=false
-				elasticsearch.client=mynode1:9200,mynode2:9200@
+# Option 2) Elastic Search (Client Model)
+elasticsearch.local=false
+elasticsearch.client=mynode1:9200,mynode2:9200
 
 
 
@@ -75,16 +75,15 @@ You basically need to add annotation "@ElasticSearchable" to your Model class. I
 
 Example:
 
-				@ElasticSearchable
-				@Entity
-				public class Post extends Model {
-				 
-				    public String title;
-				    
-				
-				    public Date postedAt;
-				    
-				}
+bc.. @ElasticSearchable
+@Entity
+public class Post extends Model {
+ 
+    public String title;   
+
+    public Date postedAt;
+    
+}
 
 
 
@@ -93,13 +92,13 @@ h2. Searching
 The biggest change on this release is a nicer search interface. We are providing a very simple way to get started, inspired by Play!'s CRUD module.
 Basically you need to create a controller class and extend ElasticSearchController. Use annotation @ElasticSearchController.For(YOURMODELCLASS.class) to tell our module what model you want to search on, here's an example:
 
-				@ElasticSearchController.For(ElasticSearchSampleModel.class)
-				public class ElasticSearchExample extends ElasticSearchController {
-				
-				} 
+bc.. @ElasticSearchController.For(ElasticSearchSampleModel.class)
+public class ElasticSearchExample extends ElasticSearchController {
+
+} 
 			
 
-You should be able to search on http://localhost:9000/elasticSearchExample/index. If you want to customize the views, just create a directory ELASTIC_SEARCH under views and change whatever you need to change.
+p. You should be able to search on http://localhost:9000/elasticSearchExample/index. If you want to customize the views, just create a directory ELASTIC_SEARCH under views and change whatever you need to change.
 
 
 
