@@ -83,7 +83,7 @@ class Education {
 	@ElasticSearchEmbedded
 	Institution institution;
 }
-	
+
 p. This will add institution.id and institution.name to education.
 By default all fields are embedded, which can be overriden by specifying the fields to embed:
 
