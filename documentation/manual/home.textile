@@ -96,6 +96,8 @@ class Education {
 
 h2. Searching
 
+h3. ElasticSearchController
+
 The biggest change on this release is a nicer search interface. We are providing a very simple way to get started, inspired by Play!'s CRUD module.
 Basically you need to create a controller class and extend ElasticSearchController. Use annotation @ElasticSearchController.For(YOURMODELCLASS.class) to tell our module what model you want to search on, here's an example:
 
@@ -105,6 +107,24 @@ public class ElasticSearchExample extends ElasticSearchController {
 }
 
 p. You should be able to search on http://localhost:9000/elasticSearchExample/index. If you want to customize the views, just create a directory ELASTIC_SEARCH under views and change whatever you need to change.
+
+h3. Custom search
+
+After you've created your XContentQueryBuilder object, you can search in two ways:
+
+1) Call ElasticSearch.search()
+2) Call ElasticSearch.query() and subsequently set query parameters (e.g. paging)
+
+If you are searching for JPA entities and need referenced entities to be available (e.g. @ManyToOne or @OneToMany relationships), use 
+
+bc. ElasticSearch.searchAndHydrate(...)
+
+or call hydrate(true) on your Query:
+
+bc. Query query = ElasticSearch.query(...);
+query.hydrate(true)
+
+This will take care of hydrating your entities so proxies and collections work.
 
 
 h2. User Interface 
