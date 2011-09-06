@@ -34,7 +34,6 @@ import play.Logger;
 import play.Play;
 import play.db.Model;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Class ElasticSearch.
  */
@@ -62,9 +61,9 @@ public abstract class ElasticSearch {
 	 * 
 	 * @return the search request builder
 	 */
-	private static <T extends Model> SearchRequestBuilder builder(QueryBuilder queryBuilder, Class<T> clazz) {
+	static <T extends Model> SearchRequestBuilder builder(QueryBuilder query, Class<T> clazz) {
 		String index = ElasticSearchAdapter.getIndexName(clazz);
-		SearchRequestBuilder builder = client().prepareSearch(index).setSearchType(SearchType.QUERY_THEN_FETCH).setQuery(queryBuilder);
+		SearchRequestBuilder builder = client().prepareSearch(index).setSearchType(SearchType.QUERY_THEN_FETCH).setQuery(query);
 		return builder;
 	}
 	
@@ -80,8 +79,8 @@ public abstract class ElasticSearch {
 	 * 
 	 * @return the query
 	 */
-	public static <T extends Model> Query query(QueryBuilder queryBuilder, Class<T> clazz) {
-		return new Query(clazz, builder(queryBuilder, clazz));
+	public static <T extends Model> Query query(QueryBuilder query, Class<T> clazz) {
+		return new Query(clazz, query);
 	}
 
 	/**
@@ -98,8 +97,8 @@ public abstract class ElasticSearch {
 	 * 
 	 * @return the search results
 	 */
-	public static <T extends Model> SearchResults search(QueryBuilder queryBuilder, Class<T> clazz, AbstractFacetBuilder... facets) {
-		return search(queryBuilder, clazz, false, facets);
+	public static <T extends Model> SearchResults search(QueryBuilder query, Class<T> clazz, AbstractFacetBuilder... facets) {
+		return search(query, clazz, false, facets);
 	}
 	
 	/**
@@ -136,29 +135,19 @@ public abstract class ElasticSearch {
 	 * 
 	 * @return the search results
 	 */
-	private static <T extends Model> SearchResults search(QueryBuilder queryBuilder, Class<T> clazz, boolean hydrate, AbstractFacetBuilder... facets) {
-		SearchRequestBuilder builder = builder(queryBuilder, clazz);
+	private static <T extends Model> SearchResults search(QueryBuilder query, Class<T> clazz, boolean hydrate, AbstractFacetBuilder... facets) {
+		// Build a query for this search request
+		Query search = query(query, clazz);
+		
+		// Control hydration
+		search.hydrate(hydrate);
+		
+		// Add facets
 		for( AbstractFacetBuilder facet : facets ) {
-			builder.addFacet(facet);
+			search.addFacet(facet);
 		}
 		
-		// Only load id field for hydrate
-		if( hydrate ) {
-			builder.addField("_id");
-		}
-		
-		if( Logger.isDebugEnabled() ) {
-			Logger.debug("ES Query: %s", builder.toString());
-		}
-		
-		SearchResponse searchResponse = builder.execute().actionGet();
-		SearchResults searchResults = null;
-		if( hydrate ) {
-			searchResults = JPATransformer.toSearchResults(searchResponse, clazz);
-		} else {
-			searchResults = Transformer.toSearchResults(searchResponse, clazz);
-		}
-		return searchResults;
+		return search.fetch();
 	}
 
 }
