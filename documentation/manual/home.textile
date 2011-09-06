@@ -33,17 +33,18 @@ h2. Enable the module
 
 After installing the module, add the following to your conf/dependencies.yml to enable it (don't forget to run play dependencies):
 
-bc. - play -> elasticsearch 0.0.9
+bc. require:
+	- play -> elasticsearch 0.0.9
 
 
 h2. Configure the module
 
 You need to configure the module by setting these properties in your application.conf. There are two ways to run your Play! app with Elastic Search, local mode or client mode. Local mode works well for development purposes, an Elastic Search instance will run on the same JVM as your Play! application automatically. You won't need to setup another service, etc. The second option is client mode which fits better in a production environment. The default option is local mode.
 
-bc.. # Option 1) Elastic Search (Local Model)
+bc. # Option 1) Elastic Search (Local Model)
 elasticsearch.local=true
 
-# Option 2) Elastic Search (Client Model)
+bc. # Option 2) Elastic Search (Client Model)
 elasticsearch.local=false
 elasticsearch.client=mynode1:9200,mynode2:9200
 
@@ -60,8 +61,7 @@ bc.. @ElasticSearchable
 @Entity
 public class Post extends Model {
  
-    public String title;    
-
+    public String title;
     public Date postedAt;
     
 }
@@ -72,12 +72,12 @@ h3. @ElasticSearchEmbedded
 
 p. Since 0.0.9 it's possible to embed properties by using "@ElasticSearchEmbedded".
 
-bc.. class Institution {
+bc. class Institution {
 	public String name;
 	public String type;
 }
 
-@ElasticSearchable
+bc. @ElasticSearchable
 class Education {
 	...
 	@ElasticSearchEmbedded
@@ -87,13 +87,12 @@ class Education {
 p. This will add institution.id and institution.name to education.
 By default all fields are embedded, which can be overriden by specifying the fields to embed:
 
-bc.. @ElasticSearchable
+bc. @ElasticSearchable
 class Education {
 	...
 	@ElasticSearchEmbedded(fields={"name"})
 	Institution institution;
 }
-
 
 h2. Searching
 
@@ -104,7 +103,6 @@ bc.. @ElasticSearchController.For(ElasticSearchSampleModel.class)
 public class ElasticSearchExample extends ElasticSearchController {
 
 }
-			
 
 p. You should be able to search on http://localhost:9000/elasticSearchExample/index. If you want to customize the views, just create a directory ELASTIC_SEARCH under views and change whatever you need to change.
 
