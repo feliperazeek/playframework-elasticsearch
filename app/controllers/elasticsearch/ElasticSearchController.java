@@ -18,8 +18,8 @@
  */
 package controllers.elasticsearch;
 
-import static org.elasticsearch.index.query.xcontent.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.xcontent.QueryBuilders.wildcardQuery;
+import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
+import static org.elasticsearch.index.query.QueryBuilders.wildcardQuery;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -33,8 +33,8 @@ import java.util.Date;
 import java.util.List;
 
 import org.elasticsearch.common.base.Strings;
-import org.elasticsearch.index.query.xcontent.BoolQueryBuilder;
-import org.elasticsearch.index.query.xcontent.QueryBuilders;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 
 import play.Play;
 import play.data.validation.MaxSize;

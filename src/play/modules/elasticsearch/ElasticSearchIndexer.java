@@ -45,7 +45,7 @@ public class ElasticSearchIndexer extends Job<Void> {
 	@Override
 	public void doJob() {
 		// In case Play starts this job, we don't need to start it again
-		ElasticSearchPlugin.markIndexerStarted();
+		LocalIndexEventHandler.markIndexerStarted();
 
 		while (true) {
 			try {

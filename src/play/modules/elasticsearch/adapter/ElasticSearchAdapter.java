@@ -37,6 +37,7 @@ import play.Logger;
 import play.db.Model;
 import play.modules.elasticsearch.annotations.ElasticSearchEmbedded;
 import play.modules.elasticsearch.annotations.ElasticSearchIgnore;
+import play.modules.elasticsearch.annotations.ElasticSearchable;
 import play.modules.elasticsearch.util.ExceptionUtil;
 import play.modules.elasticsearch.util.ReflectionUtil;
 
@@ -62,19 +63,7 @@ public abstract class ElasticSearchAdapter {
 	 * @param clazz
 	 *            the clazz
 	 */
-	public static void startIndex(Client client, Class<?> clazz) {
-		createIndex(client, getIndexName(clazz));
-	}
-
-	/**
-	 * Start index.
-	 * 
-	 * @param client
-	 *            the client
-	 * @param clazz
-	 *            the clazz
-	 */
-	public static void startIndex(Client client, String clazz) {
+	public static <T extends Model> void startIndex(Client client, Class<T> clazz) {
 		createIndex(client, getIndexName(clazz));
 	}
 
@@ -127,13 +116,14 @@ public abstract class ElasticSearchAdapter {
 		// Index Model
 		try {
 			// Define Index Name
-			String indexName = getIndexName(model);
+			String indexName = getIndexName(model.getClass());
+			String typeName = getTypeName(model.getClass());
 			Logger.debug("Index Name: %s", indexName);
 
 			contentBuilder = XContentFactory.jsonBuilder().startObject();
 			addModelToDocument(model, getFieldsToIndex(model.getClass()), "", contentBuilder, 0);
 			contentBuilder = contentBuilder.endObject().prettyPrint();
-			IndexResponse response = client.prepareIndex(indexName, indexName, model._key().toString()).setSource(contentBuilder).execute().actionGet();
+			IndexResponse response = client.prepareIndex(indexName, typeName, model._key().toString()).setSource(contentBuilder).execute().actionGet();
 
 			// Log Debug
 			Logger.info("Index Response: %s", response);
@@ -263,20 +253,10 @@ public abstract class ElasticSearchAdapter {
 	 */
 	public static <T extends Model> void deleteModel(Client client, T model) throws Exception {
 		Logger.debug("Delete Model: %s", model);
-		DeleteResponse response = client.prepareDelete(getIndexName(model), getIndexName(model), String.valueOf(model._key())).setOperationThreaded(false).execute().actionGet();
+		Class<T> clazz = (Class<T>) model.getClass();
+		DeleteResponse response = client.prepareDelete(getIndexName(clazz), getTypeName(clazz), String.valueOf(model._key())).setOperationThreaded(false).execute().actionGet();
 		Logger.debug("Delete Response: %s", response);
 
-	}
-
-	/**
-	 * Gets the index name.
-	 * 
-	 * @param model
-	 *            the model
-	 * @return the index name
-	 */
-	public static String getIndexName(Model model) {
-		return getIndexName(model.getClass());
 	}
 
 	/**
@@ -287,21 +267,24 @@ public abstract class ElasticSearchAdapter {
 	 * @return the index name
 	 */
 	public static String getIndexName(Class clazz) {
-		return getIndexName(clazz.getName());
+		ElasticSearchable meta = (ElasticSearchable) clazz.getAnnotation(ElasticSearchable.class);
+		
+		if (meta.indexName().length() > 0) {
+			return meta.indexName();
+		} else {
+			return getTypeName(clazz);
+		}
 	}
-
+	
 	/**
-	 * Gets the index name.
+	 * Gets the type name.
 	 * 
 	 * @param clazz
 	 *            the clazz
 	 * @return the index name
 	 */
-	private static String getIndexName(String clazz) {
-		Logger.debug("Class: %s", clazz);
-		String value = clazz.toLowerCase().trim().replace('.', '_');
-		Logger.debug("Index Name: %s", value);
-		return value;
+	private static String getTypeName(Class clazz) {
+		return clazz.getName().toLowerCase().trim().replace('.', '_');
 	}
 
 }

@@ -29,5 +29,6 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ElasticSearchable {
-
+	/** The index name to use */
+	String indexName() default "";
 }
