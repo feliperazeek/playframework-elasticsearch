@@ -18,15 +18,27 @@
  */
 package play.modules.elasticsearch;
 
+import play.modules.elasticsearch.rabbitmq.RabbitMQIndexEventHandler;
+
 /**
  * The Enum ElasticSearchDeliveryMode.
  */
 public enum ElasticSearchDeliveryMode {
 
 	/** The LOCAL. */
-	LOCAL,
+	LOCAL(new LocalIndexEventHandler()),
 
 	/** The RABBITMQ. */
-	RABBITMQ;
+	RABBITMQ(new RabbitMQIndexEventHandler());
+
+	private final IndexEventHandler handler;
+
+	ElasticSearchDeliveryMode(IndexEventHandler handler) {
+		this.handler = handler;
+	}
+
+	public IndexEventHandler getHandler() {
+		return handler;
+	}
 
 }
