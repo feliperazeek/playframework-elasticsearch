@@ -168,7 +168,7 @@ public class ElasticSearchPlugin extends PlayPlugin {
 		}
 
 		// Bind Admin
-		Router.addRoute("GET", "/es-admin/", "elasticsearch.ElasticSearchAdmin.index");
+		Router.addRoute("GET", "/es-admin", "elasticsearch.ElasticSearchAdmin.index");
 
 		// Check Client
 		if (client == null) {
