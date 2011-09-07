@@ -38,7 +38,6 @@ import play.Play;
 import play.PlayPlugin;
 import play.db.Model;
 import play.modules.elasticsearch.adapter.ElasticSearchAdapter;
-import play.modules.elasticsearch.rabbitmq.RabbitMQConsumerActor;
 import play.modules.elasticsearch.util.ExceptionUtil;
 import play.mvc.Router;
 
@@ -50,12 +49,6 @@ public class ElasticSearchPlugin extends PlayPlugin {
 
 	/** The started. */
 	private static boolean started = false;
-
-	/** Flag that indicates if the consumer has been started */
-	private static boolean consumerStarted = false;
-	
-	/** Flag that indicates if the indexer has been started */
-	private static boolean indexerStarted = false;
 
 	/** The model index. */
 	private static Map<Class<?>, Boolean> modelIndex = null;
@@ -110,29 +103,16 @@ public class ElasticSearchPlugin extends PlayPlugin {
 	}
 
 	/**
-	 * Gets the delivery model.
+	 * Gets the delivery mode.
 	 * 
-	 * @return the delivery model
+	 * @return the delivery mode
 	 */
-	public static ElasticSearchDeliveryMode getDeliveryModel() {
+	public static ElasticSearchDeliveryMode getDeliveryMode() {
 		String s = Play.configuration.getProperty("elasticsearch.delivery");
 		if (s == null) {
 			return ElasticSearchDeliveryMode.LOCAL;
 		}
 		return ElasticSearchDeliveryMode.valueOf(s.toUpperCase());
-	}
-
-	/**
-	 * Gets the queue.
-	 * 
-	 * @return the queue
-	 */
-	public static String getRabbitMQQueue() {
-		String s = Play.configuration.getProperty("elasticsearch.rabbitmq.queue");
-		if (s == null) {
-			return "elasticSearchQueue";
-		}
-		return s;
 	}
 
 	/**
@@ -218,10 +198,6 @@ public class ElasticSearchPlugin extends PlayPlugin {
 		}
 		return false;
 	}
-	
-	static void markIndexerStarted() {
-		indexerStarted = true;
-	}
 
 	/**
 	 * This is the method that will be sending data to ES instance
@@ -246,28 +222,7 @@ public class ElasticSearchPlugin extends PlayPlugin {
 			// Logger.debug("Not marked to be elastic searchable!");
 			return;
 		}
-
-		// If delivery mode is RabbitMQ fire off the consumer
-		if ((consumerStarted == false) && getDeliveryModel().equals(ElasticSearchDeliveryMode.RABBITMQ)) {
-			// TODO Finish RabbitMQ Integration
-			Logger.info("Triggering RabbitMQConsumer for Elastic Search...");
-			
-			// Exchange
-			akka.amqp.ExchangeType directExchange = akka.amqp.Direct.getInstance();
-			akka.amqp.AMQP.ExchangeParameters params = new akka.amqp.AMQP.ExchangeParameters(getRabbitMQQueue(), directExchange);
-			
-			// Consumer
-			com.rabbitmq.client.Address address = new com.rabbitmq.client.Address(Play.configuration.getProperty("elasticsearch.rabbitmq.host"), Integer.valueOf(Play.configuration.getProperty("elasticsearch.rabbitmq.port")));
-			com.rabbitmq.client.Address[] addresses = {address};
-			akka.amqp.AMQP.ConnectionParameters connectionParameters = new akka.amqp.AMQP.ConnectionParameters(addresses, Play.configuration.getProperty("elasticsearch.rabbitmq.username"), Play.configuration.getProperty("elasticsearch.rabbitmq.password"), Play.configuration.getProperty("elasticsearch.rabbitmq.virtualHost"));
-			akka.actor.ActorRef connection = akka.amqp.AMQP.newConnection(connectionParameters);
-			
-			akka.actor.ActorRef ref = akka.actor.Actors.actorOf(RabbitMQConsumerActor.class);
-			akka.amqp.AMQP.ConsumerParameters consumerParams = new akka.amqp.AMQP.ConsumerParameters(getRabbitMQQueue(), ref, params);
-			akka.amqp.AMQP.newConsumer(ref, consumerParams);
-			consumerStarted = true;
-		}
-
+		
 		// Get Plugin
 		ElasticSearchPlugin plugin = Play.plugin(ElasticSearchPlugin.class);
 		
@@ -296,33 +251,9 @@ public class ElasticSearchPlugin extends PlayPlugin {
 		// Sync with Elastic Search
 		Logger.info("Elastic Search Index Event: %s", event);
 		if (event != null) {
-			if (getDeliveryModel().equals(ElasticSearchDeliveryMode.RABBITMQ)) {	
-				// 
-				
-				// Exchange
-				akka.amqp.ExchangeType directExchange = akka.amqp.Direct.getInstance();
-				akka.amqp.AMQP.ExchangeParameters params = new akka.amqp.AMQP.ExchangeParameters(getRabbitMQQueue(), directExchange);
-				
-				// Producer
-				akka.amqp.AMQP.ProducerParameters producerParams = new akka.amqp.AMQP.ProducerParameters(params);
-				
-				// Connection
-				com.rabbitmq.client.Address address = new com.rabbitmq.client.Address(Play.configuration.getProperty("elasticsearch.rabbitmq.host"), Integer.valueOf(Play.configuration.getProperty("elasticsearch.rabbitmq.port")));
-				com.rabbitmq.client.Address[] addresses = {address};
-				akka.amqp.AMQP.ConnectionParameters connectionParameters = new akka.amqp.AMQP.ConnectionParameters(addresses, Play.configuration.getProperty("elasticsearch.rabbitmq.username"), Play.configuration.getProperty("elasticsearch.rabbitmq.password"), Play.configuration.getProperty("elasticsearch.rabbitmq.virtualHost"));
-				akka.actor.ActorRef connection = akka.amqp.AMQP.newConnection(connectionParameters);
-				
-				// Send Event
-				akka.actor.ActorRef producer = akka.amqp.AMQP.newProducer(connection, producerParams);
-				producer.sendOneWay(event);
-				
-			} else {
-				if(indexerStarted == false) {
-					new ElasticSearchIndexer().now();
-					indexerStarted = true;
-				}
-				ElasticSearchIndexer.stream.publish(event);
-			}
+			ElasticSearchDeliveryMode deliveryMode = getDeliveryMode();
+			IndexEventHandler handler = deliveryMode.getHandler();
+			handler.handle(event);
 		}
 	}
 
