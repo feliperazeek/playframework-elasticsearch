@@ -24,10 +24,7 @@ import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.Map;
 
-import play.modules.elasticsearch.adapter.ElasticSearchAdapter;
-import play.modules.elasticsearch.util.ExceptionUtil;
-
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.Validate;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
@@ -35,12 +32,14 @@ import org.elasticsearch.common.settings.ImmutableSettings.Builder;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
-import play.modules.elasticsearch.rabbitmq.*;
 
 import play.Logger;
 import play.Play;
 import play.PlayPlugin;
 import play.db.Model;
+import play.modules.elasticsearch.adapter.ElasticSearchAdapter;
+import play.modules.elasticsearch.rabbitmq.RabbitMQConsumerActor;
+import play.modules.elasticsearch.util.ExceptionUtil;
 import play.mvc.Router;
 
 // TODO: Auto-generated Javadoc
@@ -271,9 +270,12 @@ public class ElasticSearchPlugin extends PlayPlugin {
 
 		// Get Plugin
 		ElasticSearchPlugin plugin = Play.plugin(ElasticSearchPlugin.class);
+		
+		// Sanity check, we only index models
+		Validate.isTrue(context instanceof Model, "Only play.db.Model subclasses can be indexed");
 
 		// Check if the index has been started
-		Class<?> clazz = context.getClass();
+		Class<Model> clazz = (Class<Model>) context.getClass();
 		if (modelIndex.containsKey(clazz) == false) {
 			Logger.info("Start Index for Class: %s", clazz);
 			ElasticSearchAdapter.startIndex(plugin.client(), clazz);

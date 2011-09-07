@@ -68,6 +68,10 @@ public class Post extends Model {
 
 p. It's possible to prevent fields from being included in the index by marking them with @ElasticSearchIgnore.
 
+By default an index name is generated for you, however you can override this by setting the indexName field:
+
+bc. @ElasticSearchable(indexName="my_index_name")
+
 h3. @ElasticSearchEmbedded
 
 p. Since 0.0.9 it's possible to embed properties by using "@ElasticSearchEmbedded".
@@ -153,13 +157,13 @@ h2. Credits
 
 h2. Changelog
 
-h3. Version 0.0.9:
+h3. Version 0.0.9
 
 * Embedded property support through @ElasticSearchEmbedded
 * Fixed a bug which prevented model create- and update-events from being processed
 * ElasticSearchController now uses elastic search for searching
 
-h3. Version 0.0.8:
+h3. Version 0.0.8
 
 * JPA entity hydration support
 * Query support
