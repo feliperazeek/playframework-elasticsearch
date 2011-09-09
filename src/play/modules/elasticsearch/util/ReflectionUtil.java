@@ -33,7 +33,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import play.Logger;
+import play.db.jpa.Model;
 
+// TODO: Auto-generated Javadoc
 /**
  * The Class ReflectionUtil.
  */
@@ -357,6 +359,19 @@ public abstract class ReflectionUtil {
 			if (fieldClass.equals(value.getClass())) {
 				// Types match
 				field.set(object, value);
+			} else if (fieldClass.equals(BigDecimal.class)) {
+				field.set(object, new BigDecimal((String) value));
+			} else if (fieldClass.equals(Date.class)) {
+				field.set(object, convertToDate(value));
+			} else if (fieldClass.equals(Integer.class)) {
+				field.setInt(object, Integer.valueOf((String) value));
+			} else if (fieldClass.equals(Long.class)) {
+				if (value instanceof Integer)
+					field.set(object, new Long((Integer)value));
+				else
+					field.setLong(object, Long.valueOf((String) value));
+			} else if (fieldClass.equals(Double.class)) {
+				field.set(object, Double.valueOf((String) value));
 			} else {
 				// Types do not match, perform conversion where needed
 				if (fieldClass.equals(String.class)) {
@@ -391,7 +406,7 @@ public abstract class ReflectionUtil {
 					field.set(object, value);
 				}
 			}
-
+			
 		} catch (IllegalArgumentException e) {
 			Logger.error(ExceptionUtil.getStackTrace(e));
 		} catch (IllegalAccessException e) {
