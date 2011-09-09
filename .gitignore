@@ -2,7 +2,6 @@
 .project
 data
 .settings
-modules
 tmp
 dist
 lib
