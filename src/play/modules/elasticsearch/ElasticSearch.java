@@ -62,10 +62,9 @@ public abstract class ElasticSearch {
 	 * @return the search request builder
 	 */
 	static <T extends Model> SearchRequestBuilder builder(QueryBuilder query, Class<T> clazz) {
-		// String index = ElasticSearchAdapter.getIndexName(clazz);
-		// SearchRequestBuilder builder = client().prepareSearch(index).setSearchType(SearchType.QUERY_THEN_FETCH).setQuery(query);
-		// return builder;
-		return null;
+		String index = ElasticSearchAdapter.getIndexName(clazz);
+		SearchRequestBuilder builder = client().prepareSearch(index).setSearchType(SearchType.QUERY_THEN_FETCH).setQuery(query);
+		return builder;
 	}
 	
 	/**
