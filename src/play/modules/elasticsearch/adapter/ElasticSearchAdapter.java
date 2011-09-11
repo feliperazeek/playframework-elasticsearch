@@ -215,7 +215,7 @@ public abstract class ElasticSearchAdapter {
 		// Loop into each field
 		for (Field field : fieldsToInclude) {
 			String name = field.getName();
-			Object value = ReflectionUtil.getFieldValue(model, name);
+			Object value = ReflectionUtil.getFieldValue(model, field);
 			
 			if (value != null) {
 				

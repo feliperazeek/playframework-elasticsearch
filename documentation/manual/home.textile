@@ -47,6 +47,15 @@ bc. play install elasticsearch
 
 
 
+
+h2. Install the module
+
+Install the elasticsearch module from the modules repository:
+
+bc. play install elasticsearch
+
+
+
 h2. Enable the module
 
 After installing the module, add the following to your conf/dependencies.yml to enable it (don't forget to run play dependencies):
@@ -83,13 +92,15 @@ public class Post extends Model {
 }
 
 
-h2. Simple Searching
+
+h2. Searching
+
+h3. Simple Searching
 
 bc. SearchResults<Post> list = ElasticSearch.search(QueryBuilders.fieldQuery("title", "what a search"), Post.class);
 See "Elastic Search documentation":http://www.elasticsearch.org/guide/reference/java-api/search.html for more example.
 
-
-h2. Searching
+h3. ElasticSearchController
 
 The biggest change on this release is a nicer search interface. We are providing a very simple way to get started, inspired by Play!'s CRUD module.
 Basically you need to create a controller class and extend ElasticSearchController. Use annotation @ElasticSearchController.For(YOURMODELCLASS.class) to tell our module what model you want to search on, here's an example:
@@ -104,18 +115,15 @@ p. You should be able to search on http://localhost:9000/elasticSearchExample/in
 
 
 
-
 h2. User Interface 
 
 After you start your application (play run), you should have an admin interface automatically running on "http://localhost:9000/es-admin/(http://localhost:9000/es-admin/)":http://localhost:9000/es-admin/.
 
 
 
-
 h2. Source Code
 
 Fork it on Github "https://github.com/feliperazeek/playframework-elasticsearch":https://github.com/feliperazeek/playframework-elasticsearch.
-
 
 
 
@@ -133,3 +141,17 @@ h2. Credits
 
 * Shay Banon for the great work with Elastic Search and Compass, I have been following his work for a few years, great stuff.
 * Ben Birch ("https://github.com/mobz":https://github.com/mobz) for the work on the User Interface.
+
+
+h2. Changelog
+
+h3. Version 0.0.9
+
+* Embedded property support through @ElasticSearchEmbedded
+* Fixed a bug which prevented model create- and update-events from being processed
+* ElasticSearchController now uses elastic search for searching
+
+h3. Version 0.0.8
+
+* JPA entity hydration support
+* Query support
