@@ -8,7 +8,6 @@ import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
 import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.common.xcontent.XContentFactory;
 
 import play.db.Model;
 import play.modules.elasticsearch.annotations.ElasticSearchIgnore;
@@ -84,15 +83,6 @@ public class PlayModelMapper<M extends Model> implements ModelMapper<M> {
 		}
 
 		return mapping;
-	}
-
-	public XContentBuilder getMapping() throws IOException {
-		XContentBuilder builder = XContentFactory.jsonBuilder();
-		builder.startObject();
-		addMapping(builder);
-		builder.endObject();
-
-		return builder;
 	}
 
 	@Override
