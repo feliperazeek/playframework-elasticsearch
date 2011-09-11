@@ -61,7 +61,7 @@ h2. Enable the module
 After installing the module, add the following to your conf/dependencies.yml to enable it (don't forget to run play dependencies):
 
 bc. require:
-	- play -> elasticsearch 0.1
+	- play -> elasticsearch 0.2
 
 
 h2. Configure the module
