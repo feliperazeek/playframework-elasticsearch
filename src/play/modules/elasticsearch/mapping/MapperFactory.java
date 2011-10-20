@@ -4,7 +4,6 @@ import java.lang.reflect.Field;
 import java.util.Collection;
 
 import play.modules.elasticsearch.annotations.ElasticSearchEmbedded;
-import play.modules.elasticsearch.annotations.ElasticSearchable;
 import play.modules.elasticsearch.mapping.impl.CollectionFieldMapper;
 import play.modules.elasticsearch.mapping.impl.EmbeddedFieldMapper;
 import play.modules.elasticsearch.mapping.impl.PlayModelMapper;
@@ -27,7 +26,7 @@ public class MapperFactory {
 	 * @return the model mapper
 	 */
 	public static <M> ModelMapper<M> getMapper(Class<M> clazz) throws MappingException {
-		if (!clazz.isAnnotationPresent(ElasticSearchable.class)) {
+		if (!MappingUtil.isSearchable(clazz)) {
 			throw new MappingException("Class must be annotated with @ElasticSearchable");
 		}
 

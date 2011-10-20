@@ -18,9 +18,13 @@
  */
 package play.modules.elasticsearch;
 
-import play.modules.elasticsearch.adapter.ElasticSearchAdapter;
-import play.modules.elasticsearch.util.ExceptionUtil;
+import org.elasticsearch.client.Client;
+
 import play.Logger;
+import play.db.Model;
+import play.modules.elasticsearch.adapter.ElasticSearchAdapter;
+import play.modules.elasticsearch.mapping.ModelMapper;
+import play.modules.elasticsearch.util.ExceptionUtil;
 
 /**
  * The Class ElasticSearchIndexAction.
@@ -37,15 +41,19 @@ public class ElasticSearchIndexAction implements play.libs.F.Action<ElasticSearc
 		// Log Debug
 		Logger.info("Elastic Search - %s Event", message);
 
+		Client client = ElasticSearchPlugin.client();
+		Model object = message.getObject();
+		ModelMapper<Model> mapper = (ModelMapper<Model>) ElasticSearchPlugin.getMapper(object.getClass());
+
 		// Index Event
 		try {
-			switch(message.getType()) {
-				case INDEX:
-					ElasticSearchAdapter.indexModel(ElasticSearchPlugin.client(), message.getObject());
-					break;
-				case DELETE:
-					ElasticSearchAdapter.deleteModel(ElasticSearchPlugin.client(), message.getObject());
-					break;
+			switch (message.getType()) {
+			case INDEX:
+				ElasticSearchAdapter.indexModel(client, mapper, object);
+				break;
+			case DELETE:
+				ElasticSearchAdapter.deleteModel(client, mapper, object);
+				break;
 			}
 		} catch (Throwable t) {
 			Logger.error(ExceptionUtil.getStackTrace(t));
