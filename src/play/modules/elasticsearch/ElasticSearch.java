@@ -146,8 +146,17 @@ public abstract class ElasticSearch {
 		return search.fetch();
 	}
 	
+	/**
+	 * Indexes the given model
+	 * 
+	 * @param <T>
+	 *            the model type
+	 * @param model
+	 *            the model
+	 */
 	public static <T extends Model> void index(T model) {
-		
+		ElasticSearchPlugin plugin = Play.plugin(ElasticSearchPlugin.class);
+		plugin.index(model);
 	}
 
 }
