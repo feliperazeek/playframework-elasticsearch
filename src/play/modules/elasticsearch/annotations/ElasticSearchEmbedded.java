@@ -33,5 +33,16 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ElasticSearchEmbedded {
+	/** prefix to use in index */
+	String prefix() default "";
+
+	/** fields to embed in index */
 	String[] fields() default {};
+
+	/** embedding mode to use */
+	Mode mode() default Mode.embedded;
+
+	public enum Mode {
+		embedded, nested, object
+	}
 }

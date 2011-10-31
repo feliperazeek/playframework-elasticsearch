@@ -18,21 +18,16 @@
  */
 package play.modules.elasticsearch;
 
-import play.modules.elasticsearch.adapter.ElasticSearchAdapter;
-import play.modules.elasticsearch.search.SearchResults;
-import play.modules.elasticsearch.transformer.JPATransformer;
-import play.modules.elasticsearch.transformer.Transformer;
-
-import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.action.search.SearchRequestBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.facet.AbstractFacetBuilder;
 
-import play.Logger;
 import play.Play;
 import play.db.Model;
+import play.modules.elasticsearch.mapping.ModelMapper;
+import play.modules.elasticsearch.search.SearchResults;
 
 /**
  * The Class ElasticSearch.
@@ -62,7 +57,8 @@ public abstract class ElasticSearch {
 	 * @return the search request builder
 	 */
 	static <T extends Model> SearchRequestBuilder builder(QueryBuilder query, Class<T> clazz) {
-		String index = ElasticSearchAdapter.getIndexName(clazz);
+		ModelMapper<T> mapper = ElasticSearchPlugin.getMapper(clazz);
+		String index = mapper.getIndexName();
 		SearchRequestBuilder builder = client().prepareSearch(index).setSearchType(SearchType.QUERY_THEN_FETCH).setQuery(query);
 		return builder;
 	}
@@ -148,6 +144,19 @@ public abstract class ElasticSearch {
 		}
 		
 		return search.fetch();
+	}
+	
+	/**
+	 * Indexes the given model
+	 * 
+	 * @param <T>
+	 *            the model type
+	 * @param model
+	 *            the model
+	 */
+	public static <T extends Model> void index(T model) {
+		ElasticSearchPlugin plugin = Play.plugin(ElasticSearchPlugin.class);
+		plugin.index(model);
 	}
 
 }
