@@ -22,7 +22,9 @@ import static org.elasticsearch.node.NodeBuilder.nodeBuilder;
 
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang.Validate;
 import org.elasticsearch.client.Client;
@@ -37,7 +39,11 @@ import play.Logger;
 import play.Play;
 import play.PlayPlugin;
 import play.db.Model;
+import play.modules.elasticsearch.ElasticSearchIndexEvent.Type;
 import play.modules.elasticsearch.adapter.ElasticSearchAdapter;
+import play.modules.elasticsearch.mapping.MapperFactory;
+import play.modules.elasticsearch.mapping.MappingUtil;
+import play.modules.elasticsearch.mapping.ModelMapper;
 import play.modules.elasticsearch.util.ExceptionUtil;
 import play.mvc.Router;
 
@@ -50,8 +56,11 @@ public class ElasticSearchPlugin extends PlayPlugin {
 	/** The started. */
 	private static boolean started = false;
 
-	/** The model index. */
-	private static Map<Class<?>, Boolean> modelIndex = null;
+	/** The mappers index. */
+	private static Map<Class<?>, ModelMapper<?>> mappers = null;
+	
+	/** The started indices. */
+	private static Set<Class<?>> indicesStarted = null;
 
 	/** The client. */
 	private static Client client = null;
@@ -123,8 +132,9 @@ public class ElasticSearchPlugin extends PlayPlugin {
 	 */
 	@Override
 	public void onApplicationStart() {
-		// Start Model Map
-		modelIndex = new HashMap<Class<?>, Boolean>();
+		// (re-)set caches
+		mappers = new HashMap<Class<?>, ModelMapper<?>>();
+		indicesStarted = new HashSet<Class<?>>();
 
 		// Make sure it doesn't get started more than once
 		if ((client != null) || started) {
@@ -175,28 +185,29 @@ public class ElasticSearchPlugin extends PlayPlugin {
 			throw new RuntimeException("Elastic Search Client cannot be null - please check the configuration provided and the health of your Elastic Search instances.");
 		}
 	}
-
-	/**
-	 * Checks if is elastic searchable.
-	 * 
-	 * @param o
-	 *            the o
-	 * @return true, if is elastic searchable
-	 */
-	private boolean isElasticSearchable(Object o) {
-		Class<?> clazz = o.getClass();
-		while (clazz != null) {
-			// Logger.info("Class: %s", clazz);
-			for (Annotation a : clazz.getAnnotations()) {
-				// Logger.info("Class: %s - Annotation: %s", clazz,
-				// a.toString());
-				if (a.toString().indexOf("ElasticSearchable") > -1) {
-					return true;
-				}
-			}
-			clazz = clazz.getSuperclass();
+	
+	public static <M> ModelMapper<M> getMapper(Class<M> clazz) {
+		if (mappers.containsKey(clazz)) {
+			return (ModelMapper<M>) mappers.get(clazz);
 		}
-		return false;
+		
+		ModelMapper<M> mapper = MapperFactory.getMapper(clazz);
+		mappers.put(clazz, mapper);
+		
+		return mapper;
+	}
+	
+	private static void startIndexIfNeeded(Class<Model> clazz) {
+		if (!indicesStarted.contains(clazz)) {
+			ModelMapper<Model> mapper = getMapper(clazz);
+			Logger.info("Start Index for Class: %s", clazz);
+			ElasticSearchAdapter.startIndex(client(), mapper);
+			indicesStarted.add(clazz);
+		}
+	}
+	
+	private static boolean isInterestingEvent(String event) {
+		return event.endsWith(".objectPersisted") || event.endsWith(".objectUpdated") || event.endsWith(".objectDeleted");
 	}
 
 	/**
@@ -209,33 +220,23 @@ public class ElasticSearchPlugin extends PlayPlugin {
 		// Log Debug
 		Logger.info("Received %s Event, Object: %s", message, context);
 
-		if (!message.endsWith(".objectPersisted") && !message.endsWith(".objectUpdated") && !message.endsWith(".objectDeleted")) {
+		if (isInterestingEvent(message) == false) {
 			return;
 		}
 		
 		Logger.debug("Processing %s Event", message);
 
-		// Check if object has annotation
-		boolean isSearchable = this.isElasticSearchable(context);
-		// Logger.info("Searchable: %s", isSearchable);
-		if (isSearchable == false) {
-			// Logger.debug("Not marked to be elastic searchable!");
+		// Check if object is searchable
+		if (MappingUtil.isSearchable(context.getClass()) == false) {
 			return;
 		}
 		
-		// Get Plugin
-		ElasticSearchPlugin plugin = Play.plugin(ElasticSearchPlugin.class);
-		
 		// Sanity check, we only index models
 		Validate.isTrue(context instanceof Model, "Only play.db.Model subclasses can be indexed");
-
-		// Check if the index has been started
+		
+		// Start index if needed
 		Class<Model> clazz = (Class<Model>) context.getClass();
-		if (modelIndex.containsKey(clazz) == false) {
-			Logger.info("Start Index for Class: %s", clazz);
-			ElasticSearchAdapter.startIndex(plugin.client(), clazz);
-			modelIndex.put(clazz, Boolean.TRUE);
-		}
+		startIndexIfNeeded(clazz);
 
 		// Define Event
 		ElasticSearchIndexEvent event = null;
@@ -255,6 +256,22 @@ public class ElasticSearchPlugin extends PlayPlugin {
 			IndexEventHandler handler = deliveryMode.getHandler();
 			handler.handle(event);
 		}
+	}
+	
+	<M extends Model> void index(M model) {
+		Class<Model> clazz = (Class<Model>) model.getClass();
+		
+		// Check if object is searchable
+		if (MappingUtil.isSearchable(clazz) == false) {
+			throw new IllegalArgumentException("model is not searchable");
+		}
+		
+		startIndexIfNeeded(clazz);
+		
+		ElasticSearchIndexEvent event = new ElasticSearchIndexEvent(model, Type.INDEX);
+		ElasticSearchDeliveryMode deliveryMode = getDeliveryMode();
+		IndexEventHandler handler = deliveryMode.getHandler();
+		handler.handle(event);
 	}
 
 }
