@@ -29,5 +29,3 @@ application.log.system.out=on
 play.jobs.pool=50
 
 
-elasticsearch.delivery=rabbitmq
-elasticsearch.rabbitmq.queue=elasticsearch
