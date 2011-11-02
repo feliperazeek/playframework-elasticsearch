@@ -73,7 +73,7 @@ public class JPATransformer {
 		Logger.debug("Models after sorting: %s", objects);
 
 		// Return Results
-		return new SearchResults(count, objects, searchResponse.facets());
+		return new SearchResults<T>(count, objects, searchResponse.facets());
 	}
 
 	/**

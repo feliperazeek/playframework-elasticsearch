@@ -18,35 +18,41 @@ import play.modules.elasticsearch.mapping.ModelMapper;
  */
 public class EmbeddedMappingTest extends MappingTest {
 
+	@SuppressWarnings("serial")
 	@ElasticSearchable
 	public static class NotMappedModel extends Model {
 		public Embedded embedded;
 	}
 
+	@SuppressWarnings("serial")
 	@ElasticSearchable
 	public static class EmbeddedModel extends Model {
 		@ElasticSearchEmbedded
 		public Embedded embedded;
 	}
 
+	@SuppressWarnings("serial")
 	@ElasticSearchable
 	public static class EmbeddedPrefixModel extends Model {
 		@ElasticSearchEmbedded(prefix = "prefix_")
 		public Embedded embedded;
 	}
 
+	@SuppressWarnings("serial")
 	@ElasticSearchable
 	public static class EmbeddedFieldsModel extends Model {
 		@ElasticSearchEmbedded(fields = { "include", "exclude" })
 		public Embedded embedded;
 	}
 
+	@SuppressWarnings("serial")
 	@ElasticSearchable
 	public static class NestedModel extends Model {
 		@ElasticSearchEmbedded(mode = Mode.nested)
 		public Embedded embedded;
 	}
 
+	@SuppressWarnings("serial")
 	@ElasticSearchable
 	public static class ObjectModel extends Model {
 		@ElasticSearchEmbedded(mode = Mode.object)

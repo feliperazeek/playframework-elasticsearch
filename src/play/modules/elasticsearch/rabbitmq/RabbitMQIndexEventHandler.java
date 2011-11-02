@@ -2,7 +2,6 @@ package play.modules.elasticsearch.rabbitmq;
 
 import play.Logger;
 import play.Play;
-import play.modules.elasticsearch.ElasticSearchDeliveryMode;
 import play.modules.elasticsearch.ElasticSearchIndexEvent;
 import play.modules.elasticsearch.IndexEventHandler;
 
@@ -109,6 +108,7 @@ public class RabbitMQIndexEventHandler implements IndexEventHandler {
 		com.rabbitmq.client.Address address = new com.rabbitmq.client.Address(getHost(), getPort());
 		com.rabbitmq.client.Address[] addresses = {address};
 		akka.amqp.AMQP.ConnectionParameters connectionParameters = new akka.amqp.AMQP.ConnectionParameters(addresses, getUsername(), getPassword(), getVirtualHost());
+		@SuppressWarnings("unused")
 		akka.actor.ActorRef connection = akka.amqp.AMQP.newConnection(connectionParameters);
 		
 		akka.actor.ActorRef ref = akka.actor.Actors.actorOf(RabbitMQConsumerActor.class);

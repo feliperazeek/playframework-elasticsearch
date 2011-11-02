@@ -357,9 +357,9 @@ public class ElasticSearchController extends Controller {
 		 * @return the list
 		 */
 		@SuppressWarnings("unchecked")
-		public SearchResults<Model> findPage(int page, String search, String searchFields, String orderBy, String order, String where) {
+		public <M extends Model> SearchResults<M> findPage(int page, String search, String searchFields, String orderBy, String order, String where) {
 			BoolQueryBuilder qb = buildQueryBuilder(search, searchFields, where);			
-			Query<Model> query = ElasticSearch.query(qb, entityClass);
+			Query<M> query = (Query<M>) ElasticSearch.query(qb, entityClass);
 			// FIXME Currently we ignore the orderBy and order fields
 			query.from((page - 1) * getPageSize()).size(getPageSize());
 			query.hydrate(true);

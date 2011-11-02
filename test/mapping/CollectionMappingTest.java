@@ -19,11 +19,13 @@ import play.modules.elasticsearch.mapping.ModelMapper;
  */
 public class CollectionMappingTest extends MappingTest {
 
+	@SuppressWarnings("serial")
 	@ElasticSearchable
 	public static class TestModel extends Model {
 		public List<String> strings;
 	}
 
+	@SuppressWarnings("serial")
 	@ElasticSearchable
 	public static class TestEmbeddedModel extends Model {
 		@ElasticSearchEmbedded

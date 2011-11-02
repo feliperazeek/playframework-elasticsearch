@@ -18,15 +18,18 @@ public class ElasticSearchableTest extends UnitTest {
 
 	}
 
+	@SuppressWarnings("serial")
 	private static class TestModelNotSearchable extends Model {
 
 	}
 
+	@SuppressWarnings("serial")
 	@ElasticSearchable
 	private static class TestModel extends Model {
 
 	}
 
+	@SuppressWarnings("serial")
 	@ElasticSearchable(indexName = "testindex")
 	private static class TestModelWithIndexName extends Model {
 
