@@ -2,7 +2,6 @@ package play.modules.elasticsearch.rabbitmq;
 
 import play.Logger;
 import akka.actor.UntypedActor;
-import akka.amqp.AMQP;
 import play.modules.elasticsearch.ElasticSearchIndexAction;
 import play.modules.elasticsearch.ElasticSearchIndexEvent;
 

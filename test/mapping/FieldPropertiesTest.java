@@ -18,6 +18,7 @@ import play.modules.elasticsearch.mapping.ModelMapper;
  */
 public class FieldPropertiesTest extends MappingTest {
 
+	@SuppressWarnings("serial")
 	@ElasticSearchable
 	public static class TestModel extends Model {
 		@ElasticSearchField(index = Index.not_analyzed, store = Store.yes, type = "test")

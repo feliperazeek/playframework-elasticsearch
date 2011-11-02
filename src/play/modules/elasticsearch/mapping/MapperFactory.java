@@ -25,6 +25,7 @@ public class MapperFactory {
 	 *             in case of mapping problems
 	 * @return the model mapper
 	 */
+	@SuppressWarnings("unchecked")
 	public static <M> ModelMapper<M> getMapper(Class<M> clazz) throws MappingException {
 		if (!MappingUtil.isSearchable(clazz)) {
 			throw new MappingException("Class must be annotated with @ElasticSearchable");
