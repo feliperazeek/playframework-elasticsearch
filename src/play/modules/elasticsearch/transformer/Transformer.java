@@ -74,7 +74,7 @@ public class Transformer<T extends Model> {
 		}
 
 		// Return Results
-		return new SearchResults(count, objects, searchResponse.facets());
+		return new SearchResults<T>(count, objects, searchResponse.facets());
 	}
 
 }

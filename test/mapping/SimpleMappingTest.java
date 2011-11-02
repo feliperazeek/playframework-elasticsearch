@@ -16,6 +16,7 @@ import play.modules.elasticsearch.mapping.ModelMapper;
  */
 public class SimpleMappingTest extends MappingTest {
 
+	@SuppressWarnings("serial")
 	@ElasticSearchable
 	public static class TestModel extends Model {
 		public String _string;

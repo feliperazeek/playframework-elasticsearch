@@ -43,6 +43,7 @@ public class ElasticSearchIndexAction implements play.libs.F.Action<ElasticSearc
 
 		Client client = ElasticSearchPlugin.client();
 		Model object = message.getObject();
+		@SuppressWarnings("unchecked")
 		ModelMapper<Model> mapper = (ModelMapper<Model>) ElasticSearchPlugin.getMapper(object.getClass());
 
 		// Index Event

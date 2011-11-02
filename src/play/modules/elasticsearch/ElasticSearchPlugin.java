@@ -20,7 +20,6 @@ package play.modules.elasticsearch;
 
 import static org.elasticsearch.node.NodeBuilder.nodeBuilder;
 
-import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -186,6 +185,7 @@ public class ElasticSearchPlugin extends PlayPlugin {
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
 	public static <M> ModelMapper<M> getMapper(Class<M> clazz) {
 		if (mappers.containsKey(clazz)) {
 			return (ModelMapper<M>) mappers.get(clazz);
@@ -235,6 +235,7 @@ public class ElasticSearchPlugin extends PlayPlugin {
 		Validate.isTrue(context instanceof Model, "Only play.db.Model subclasses can be indexed");
 		
 		// Start index if needed
+		@SuppressWarnings("unchecked")
 		Class<Model> clazz = (Class<Model>) context.getClass();
 		startIndexIfNeeded(clazz);
 
@@ -259,6 +260,7 @@ public class ElasticSearchPlugin extends PlayPlugin {
 	}
 	
 	<M extends Model> void index(M model) {
+		@SuppressWarnings("unchecked")
 		Class<Model> clazz = (Class<Model>) model.getClass();
 		
 		// Check if object is searchable

@@ -40,8 +40,7 @@ public abstract class ElasticSearch {
 	 * @return the client
 	 */
 	public static Client client() {
-		ElasticSearchPlugin plugin = Play.plugin(ElasticSearchPlugin.class);
-		return plugin.client();
+		return ElasticSearchPlugin.client();
 	}
 	
 	/**
@@ -75,8 +74,8 @@ public abstract class ElasticSearch {
 	 * 
 	 * @return the query
 	 */
-	public static <T extends Model> Query query(QueryBuilder query, Class<T> clazz) {
-		return new Query(clazz, query);
+	public static <T extends Model> Query<T> query(QueryBuilder query, Class<T> clazz) {
+		return new Query<T>(clazz, query);
 	}
 
 	/**
@@ -93,7 +92,7 @@ public abstract class ElasticSearch {
 	 * 
 	 * @return the search results
 	 */
-	public static <T extends Model> SearchResults search(QueryBuilder query, Class<T> clazz, AbstractFacetBuilder... facets) {
+	public static <T extends Model> SearchResults<T> search(QueryBuilder query, Class<T> clazz, AbstractFacetBuilder... facets) {
 		return search(query, clazz, false, facets);
 	}
 	
@@ -111,7 +110,7 @@ public abstract class ElasticSearch {
 	 * 
 	 * @return the search results
 	 */
-	public static <T extends Model> SearchResults searchAndHydrate(QueryBuilder queryBuilder, Class<T> clazz, AbstractFacetBuilder... facets) {
+	public static <T extends Model> SearchResults<T> searchAndHydrate(QueryBuilder queryBuilder, Class<T> clazz, AbstractFacetBuilder... facets) {
 		return search(queryBuilder, clazz, true, facets);
 	}
 	
@@ -131,9 +130,9 @@ public abstract class ElasticSearch {
 	 * 
 	 * @return the search results
 	 */
-	private static <T extends Model> SearchResults search(QueryBuilder query, Class<T> clazz, boolean hydrate, AbstractFacetBuilder... facets) {
+	private static <T extends Model> SearchResults<T> search(QueryBuilder query, Class<T> clazz, boolean hydrate, AbstractFacetBuilder... facets) {
 		// Build a query for this search request
-		Query search = query(query, clazz);
+		Query<T> search = query(query, clazz);
 		
 		// Control hydration
 		search.hydrate(hydrate);

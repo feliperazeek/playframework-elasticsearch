@@ -52,7 +52,7 @@ public class Query<T extends Model> {
 	 *            record index to start from
 	 * @return self
 	 */
-	public Query from(int from) {
+	public Query<T> from(int from) {
 		this.from = from;
 
 		return this;
@@ -65,7 +65,7 @@ public class Query<T extends Model> {
 	 *            the fetch size
 	 * @return self
 	 */
-	public Query size(int size) {
+	public Query<T> size(int size) {
 		this.size = size;
 
 		return this;
@@ -78,7 +78,7 @@ public class Query<T extends Model> {
 	 *            hydrate entities
 	 * @return self
 	 */
-	public Query hydrate(boolean hydrate) {
+	public Query<T> hydrate(boolean hydrate) {
 		this.hydrate = hydrate;
 
 		return this;
@@ -91,7 +91,7 @@ public class Query<T extends Model> {
 	 *            the facet
 	 * @return self
 	 */
-	public Query addFacet(AbstractFacetBuilder facet) {
+	public Query<T> addFacet(AbstractFacetBuilder facet) {
 		Validate.notNull(facet, "facet cannot be null");
 		facets.add(facet);
 
@@ -107,7 +107,7 @@ public class Query<T extends Model> {
 	 *            the sort order
 	 * @return self
 	 */
-	public Query addSort(String field, SortOrder order) {
+	public Query<T> addSort(String field, SortOrder order) {
 		Validate.notEmpty(field, "field cannot be null");
 		Validate.notNull(order, "order cannot be null");
 		sorts.add(SortBuilders.fieldSort(field).order(order));
@@ -122,7 +122,7 @@ public class Query<T extends Model> {
 	 *            the sort builder
 	 * @return self
 	 */
-	public Query addSort(SortBuilder sort) {
+	public Query<T> addSort(SortBuilder sort) {
 		Validate.notNull(sort, "sort cannot be null");
 		sorts.add(sort);
 
@@ -166,7 +166,7 @@ public class Query<T extends Model> {
 		}
 
 		SearchResponse searchResponse = request.execute().actionGet();
-		SearchResults searchResults = null;
+		SearchResults<T> searchResults = null;
 		if (hydrate) {
 			searchResults = JPATransformer.toSearchResults(searchResponse, clazz);
 		} else {

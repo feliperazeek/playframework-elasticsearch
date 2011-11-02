@@ -18,12 +18,11 @@
  */
 package play.modules.elasticsearch;
 
-import play.modules.elasticsearch.util.ExceptionUtil;
 import play.Logger;
 import play.db.jpa.NoTransaction;
 import play.jobs.Job;
-import play.jobs.OnApplicationStart;
 import play.libs.F.Promise;
+import play.modules.elasticsearch.util.ExceptionUtil;
 
 /**
  * Indexer job.

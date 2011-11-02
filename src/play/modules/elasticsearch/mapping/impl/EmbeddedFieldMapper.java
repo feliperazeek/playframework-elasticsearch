@@ -45,6 +45,7 @@ public class EmbeddedFieldMapper<M> extends AbstractFieldMapper<M> {
 	}
 
 	static List<Field> getFieldsToIndex(Class<?> clazz, ElasticSearchEmbedded meta) {
+		@SuppressWarnings("unchecked")
 		List<String> fieldsToIndex = Arrays.asList(meta.fields());
 		List<Field> fields = new ArrayList<Field>();
 
