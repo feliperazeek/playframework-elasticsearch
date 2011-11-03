@@ -142,9 +142,8 @@ public abstract class ElasticSearchAdapter {
 			String documentId = mapper.getDocumentId(model);
 			Logger.debug("Index Name: %s", indexName);
 
-			contentBuilder = XContentFactory.safeJsonBuilder().prettyPrint().startObject();
+			contentBuilder = XContentFactory.safeJsonBuilder().prettyPrint();
 			mapper.addModel(model, contentBuilder);
-			contentBuilder = contentBuilder.endObject();
 			IndexResponse response = client.prepareIndex(indexName, typeName, documentId)
 					.setSource(contentBuilder).execute().actionGet();
 
