@@ -95,6 +95,7 @@ public abstract class ElasticSearchAdapter {
 			Logger.debug("Create Elastic Search Type %s/%s", indexName, typeName);
 			PutMappingRequest request = Requests.putMappingRequest(indexName).type(typeName);
 			XContentBuilder mapping = MappingUtil.getMapping(mapper);
+			Logger.debug("Type mapping: \n %s", mapping.string());
 			request.source(mapping);
 			PutMappingResponse response = client.admin().indices().putMapping(request).actionGet();
 			Logger.debug("Response: %s", response);
@@ -142,9 +143,8 @@ public abstract class ElasticSearchAdapter {
 			String documentId = mapper.getDocumentId(model);
 			Logger.debug("Index Name: %s", indexName);
 
-			contentBuilder = XContentFactory.safeJsonBuilder().prettyPrint().startObject();
+			contentBuilder = XContentFactory.safeJsonBuilder().prettyPrint();
 			mapper.addModel(model, contentBuilder);
-			contentBuilder = contentBuilder.endObject();
 			IndexResponse response = client.prepareIndex(indexName, typeName, documentId)
 					.setSource(contentBuilder).execute().actionGet();
 
