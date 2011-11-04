@@ -385,6 +385,12 @@ public abstract class ReflectionUtil {
 					} else {
 						field.set(object, Double.valueOf(value.toString()));
 					}
+				} else if (fieldClass.equals(Float.class)) {
+					if( value instanceof Number ) {
+						field.set(object, Float.valueOf(((Number)value).floatValue()));
+					} else {
+						field.set(object, Float.valueOf(value.toString()));
+					}
 				
 				// Fallback to simply trying to set the field
 				} else {
