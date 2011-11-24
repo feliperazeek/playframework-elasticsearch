@@ -1,23 +1,23 @@
 # This file defines all module routes (Higher priority routes first)
 #
-# import these routes in the main app as :
+# import these routes in the main app as:
 # *     /                       module:elasticsearch
 #
 # ~~~~
 
-GET     /?                      elasticsearch.ElasticSearchAdmin.index
+GET     /?                                      elasticsearch.ElasticSearchAdmin.index
 
-*     /admin/                       module:crud
-GET   /public/              	   staticDir:public
+*       /admin/                                 module:crud
+GET     /public                                 staticDir:public
 
 #{elasticsearch.types}
-GET			/?											${type.controllerClass.name.substring(12).replace('$','')}.index
-GET			/${type.controllerName}/search				${type.controllerClass.name.substring(12).replace('$','')}.search
-POST		/${type.controllerName}/search				${type.controllerClass.name.substring(12).replace('$','')}.search
+GET     /?                                      ${type.controllerClass.name.substring(12).replace('$','')}.index
+GET     /${type.controllerName}/search          ${type.controllerClass.name.substring(12).replace('$','')}.search
+POST    /${type.controllerName}/search          ${type.controllerClass.name.substring(12).replace('$','')}.search
 #{/elasticsearch.types}
 
 
-GET     /es-admin               						elasticsearch.ElasticSearchAdmin.index
-GET     /es-admin/               						elasticsearch.ElasticSearchAdmin.index
+GET     /es-admin                               elasticsearch.ElasticSearchAdmin.index
+GET     /es-admin/                              elasticsearch.ElasticSearchAdmin.index
 
-*       /{controller}/{action}                  		{controller}.{action}
+*       /{controller}/{action}                  {controller}.{action}
