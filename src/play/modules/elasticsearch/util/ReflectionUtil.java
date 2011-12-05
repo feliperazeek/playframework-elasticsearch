@@ -32,6 +32,8 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.elasticsearch.common.xcontent.XContentBuilder;
+
 import play.Logger;
 
 /**
@@ -44,9 +46,6 @@ public abstract class ReflectionUtil {
 
 	/** The Constant classFieldsCache. */
 	private static final ConcurrentMap<String, List<Field>> classFieldsCache = new ConcurrentHashMap<String, List<Field>>();
-
-	/** The Constant DATE_FORMAT. */
-	public static final String DATE_FORMAT = "MM/dd/yyyy HH:mm:ss.SSS";
 
 	/**
 	 * Instantiates a new reflection util.
@@ -522,8 +521,8 @@ public abstract class ReflectionUtil {
 	 */
 	private static Date getDate(String val) {
 		try {
-			SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
-			return sdf.parse(val);
+			// Use ES internal converter
+			return XContentBuilder.defaultDatePrinter.parseDateTime(val).toDate();
 		} catch (Throwable t) {
 			Logger.error(ExceptionUtil.getStackTrace(t), val);
 		}
