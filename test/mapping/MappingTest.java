@@ -17,7 +17,7 @@ public abstract class MappingTest extends UnitTest {
 	 * @throws IOException
 	 */
 	protected static XContentBuilder builder() throws IOException {
-		return XContentFactory.safeJsonBuilder().prettyPrint();
+		return XContentFactory.jsonBuilder().prettyPrint();
 	}
 
 	/**
