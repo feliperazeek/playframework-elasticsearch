@@ -24,6 +24,7 @@ import play.modules.elasticsearch.util.ReflectionUtil;
 public class CollectionFieldMapper<M> extends AbstractFieldMapper<M> {
 
 	private final boolean nestedMode;
+	private final String type;
 	private final List<FieldMapper<Object>> fields;
 
 	public CollectionFieldMapper(Field field) {
@@ -40,11 +41,14 @@ public class CollectionFieldMapper<M> extends AbstractFieldMapper<M> {
 		fields = new ArrayList<FieldMapper<Object>>();
 		if (nestedMode) {
 			Class<?> itemClass = getCollectionType();
+			type = detectFieldType(itemClass);
 			List<Field> fieldsToIndex = EmbeddedFieldMapper.getFieldsToIndex(itemClass, embed);
 
 			for (Field embeddedField : fieldsToIndex) {
 				fields.add(MapperFactory.getMapper(embeddedField));
 			}
+		} else {
+			type = detectFieldType(getCollectionType());
 		}
 	}
 
@@ -66,7 +70,6 @@ public class CollectionFieldMapper<M> extends AbstractFieldMapper<M> {
 			builder.endObject();
 		} else {
 			// Flat mode (array of primitives)
-			String type = detectFieldType(getCollectionType());
 			addField(field.getName(), type, meta, builder);
 		}
 	}
@@ -89,9 +92,16 @@ public class CollectionFieldMapper<M> extends AbstractFieldMapper<M> {
 					builder.endObject();
 				}
 			} else {
-				// Flat mode uses toString
+				boolean isStringType = type.equals("string");
+
+				// Flat mode uses primitive values or toString
 				for (Object object : (Collection<?>) value) {
-					builder.value(object);
+					// Use toString for string type
+					if (isStringType) {
+						builder.value(object.toString());
+					} else {
+						builder.value(object);
+					}
 				}
 			}
 

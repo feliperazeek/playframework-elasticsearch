@@ -44,6 +44,7 @@ import play.modules.elasticsearch.mapping.MapperFactory;
 import play.modules.elasticsearch.mapping.MappingUtil;
 import play.modules.elasticsearch.mapping.ModelMapper;
 import play.modules.elasticsearch.util.ExceptionUtil;
+import play.modules.elasticsearch.util.ReflectionUtil;
 import play.mvc.Router;
 
 // TODO: Auto-generated Javadoc
@@ -134,6 +135,7 @@ public class ElasticSearchPlugin extends PlayPlugin {
 		// (re-)set caches
 		mappers = new HashMap<Class<?>, ModelMapper<?>>();
 		indicesStarted = new HashSet<Class<?>>();
+		ReflectionUtil.clearCache();
 
 		// Make sure it doesn't get started more than once
 		if ((client != null) || started) {

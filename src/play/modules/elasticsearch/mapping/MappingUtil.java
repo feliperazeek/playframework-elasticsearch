@@ -44,7 +44,7 @@ public abstract class MappingUtil {
 	 * @throws IOException
 	 */
 	public static XContentBuilder getMapping(ModelMapper<?> mapper) throws IOException {
-		XContentBuilder builder = XContentFactory.safeJsonBuilder();
+		XContentBuilder builder = XContentFactory.jsonBuilder();
 		builder.startObject();
 		mapper.addMapping(builder);
 		builder.endObject();

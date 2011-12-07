@@ -5,6 +5,8 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.Transient;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
 import org.elasticsearch.common.xcontent.XContentBuilder;
@@ -50,7 +52,19 @@ public class PlayModelMapper<M extends Model> implements ModelMapper<M> {
 	static boolean shouldIgnoreField(Field field) {
 		String name = field.getName();
 
-		return StringUtils.isBlank(name) || IGNORE_FIELDS.contains(name);
+		return StringUtils.isBlank(name) || IGNORE_FIELDS.contains(name)
+				|| shouldIgnoreJPAField(field);
+	}
+
+	/**
+	 * Checks if a field should be ignored based on JPA-specifics
+	 * 
+	 * @param field
+	 *            the field to check
+	 * @return true if the field should be ignored, false otherwise
+	 */
+	static boolean shouldIgnoreJPAField(Field field) {
+		return field.isAnnotationPresent(Transient.class);
 	}
 
 	static boolean userRequestedIgnoreField(Field field) {
