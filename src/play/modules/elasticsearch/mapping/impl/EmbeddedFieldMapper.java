@@ -124,7 +124,7 @@ public class EmbeddedFieldMapper<M> extends AbstractFieldMapper<M> {
 	@Override
 	public void addToDocument(M model, XContentBuilder builder) throws IOException {
 		String name = getIndexField();
-		Object value = ReflectionUtil.getFieldValue(model, field);
+		Object value = getFieldValue(model);
 
 		if (value != null) {
 			switch (embed.mode()) {

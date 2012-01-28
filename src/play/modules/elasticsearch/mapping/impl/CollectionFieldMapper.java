@@ -83,7 +83,7 @@ public class CollectionFieldMapper<M> extends AbstractFieldMapper<M> {
 	@Override
 	public void addToDocument(M model, XContentBuilder builder) throws IOException {
 		String indexFieldName = getIndexField();
-		Collection<?> value = (Collection<?>) ReflectionUtil.getFieldValue(model, field);
+		Collection<?> value = (Collection<?>) getFieldValue(model);
 
 		if (value != null) {
 			builder.startArray(indexFieldName);
