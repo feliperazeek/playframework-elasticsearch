@@ -2,7 +2,6 @@ package play.modules.elasticsearch.mapping.impl;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.util.Date;
 
 import org.apache.commons.lang.Validate;
 import org.elasticsearch.common.xcontent.XContentBuilder;
@@ -11,6 +10,8 @@ import play.modules.elasticsearch.annotations.ElasticSearchField;
 import play.modules.elasticsearch.annotations.ElasticSearchField.Index;
 import play.modules.elasticsearch.annotations.ElasticSearchField.Store;
 import play.modules.elasticsearch.mapping.FieldMapper;
+import play.modules.elasticsearch.mapping.MappingUtil;
+import play.modules.elasticsearch.util.ReflectionUtil;
 
 /**
  * Abstract base class for {@link FieldMapper}s
@@ -63,30 +64,39 @@ public abstract class AbstractFieldMapper<M> implements FieldMapper<M> {
 		}
 	}
 
-	protected String detectFieldType(Class<?> clazz) {
-		// Core types
-		if (String.class.isAssignableFrom(clazz)) {
-			return "string";
-		} else if (Integer.class.isAssignableFrom(clazz) || int.class.isAssignableFrom(clazz)) {
-			return "integer";
-		} else if (Short.class.isAssignableFrom(clazz) || short.class.isAssignableFrom(clazz)) {
-			return "short";
-		} else if (Long.class.isAssignableFrom(clazz) || long.class.isAssignableFrom(clazz)) {
-			return "long";
-		} else if (Float.class.isAssignableFrom(clazz) || float.class.isAssignableFrom(clazz)) {
-			return "float";
-		} else if (Double.class.isAssignableFrom(clazz) || double.class.isAssignableFrom(clazz)) {
-			return "double";
-		} else if (Byte.class.isAssignableFrom(clazz) || byte.class.isAssignableFrom(clazz)) {
-			return "byte";
-		} else if (Date.class.isAssignableFrom(clazz)) {
-			return "date";
-		} else if (Boolean.class.isAssignableFrom(clazz) || boolean.class.isAssignableFrom(clazz)) {
-			return "boolean";
-		}
+	/**
+	 * Gets the name of the field we represent
+	 * 
+	 * @return
+	 */
+	protected String getFieldName() {
+		return field.getName();
+	}
 
-		// Fall back to string mapping
-		return "string";
+	/**
+	 * Gets the ElasticSearch field type for the field we represent
+	 * 
+	 * @return
+	 */
+	protected String getFieldType() {
+		if (meta != null && meta.type().length() > 0) {
+			// Type was explicitly set, use it
+			return meta.type();
+
+		} else {
+			// Detect type automatically
+			return MappingUtil.detectFieldType(field.getType());
+		}
+	}
+
+	/**
+	 * Gets the value of the field we represent, given a model instance
+	 * 
+	 * @param model
+	 * @return
+	 */
+	protected Object getFieldValue(M model) {
+		return ReflectionUtil.getFieldValue(model, field);
 	}
 
 }

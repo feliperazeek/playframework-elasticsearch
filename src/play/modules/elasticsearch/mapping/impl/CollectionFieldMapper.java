@@ -13,6 +13,7 @@ import play.modules.elasticsearch.annotations.ElasticSearchEmbedded;
 import play.modules.elasticsearch.mapping.FieldMapper;
 import play.modules.elasticsearch.mapping.MapperFactory;
 import play.modules.elasticsearch.mapping.MappingException;
+import play.modules.elasticsearch.mapping.MappingUtil;
 import play.modules.elasticsearch.util.ReflectionUtil;
 
 /**
@@ -41,14 +42,14 @@ public class CollectionFieldMapper<M> extends AbstractFieldMapper<M> {
 		fields = new ArrayList<FieldMapper<Object>>();
 		if (nestedMode) {
 			Class<?> itemClass = getCollectionType();
-			type = detectFieldType(itemClass);
+			type = MappingUtil.detectFieldType(itemClass);
 			List<Field> fieldsToIndex = EmbeddedFieldMapper.getFieldsToIndex(itemClass, embed);
 
 			for (Field embeddedField : fieldsToIndex) {
 				fields.add(MapperFactory.getMapper(embeddedField));
 			}
 		} else {
-			type = detectFieldType(getCollectionType());
+			type = MappingUtil.detectFieldType(getCollectionType());
 		}
 	}
 

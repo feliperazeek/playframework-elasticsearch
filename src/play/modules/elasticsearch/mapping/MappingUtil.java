@@ -2,6 +2,7 @@ package play.modules.elasticsearch.mapping;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.util.Date;
 
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
@@ -50,5 +51,37 @@ public abstract class MappingUtil {
 		builder.endObject();
 
 		return builder;
+	}
+
+	/**
+	 * Detect the ElasticSearch field type for a {@code Class}
+	 * 
+	 * @param clazz
+	 * @return
+	 */
+	public static String detectFieldType(Class<?> clazz) {
+		// Core types
+		if (String.class.isAssignableFrom(clazz)) {
+			return "string";
+		} else if (Integer.class.isAssignableFrom(clazz) || int.class.isAssignableFrom(clazz)) {
+			return "integer";
+		} else if (Short.class.isAssignableFrom(clazz) || short.class.isAssignableFrom(clazz)) {
+			return "short";
+		} else if (Long.class.isAssignableFrom(clazz) || long.class.isAssignableFrom(clazz)) {
+			return "long";
+		} else if (Float.class.isAssignableFrom(clazz) || float.class.isAssignableFrom(clazz)) {
+			return "float";
+		} else if (Double.class.isAssignableFrom(clazz) || double.class.isAssignableFrom(clazz)) {
+			return "double";
+		} else if (Byte.class.isAssignableFrom(clazz) || byte.class.isAssignableFrom(clazz)) {
+			return "byte";
+		} else if (Date.class.isAssignableFrom(clazz)) {
+			return "date";
+		} else if (Boolean.class.isAssignableFrom(clazz) || boolean.class.isAssignableFrom(clazz)) {
+			return "boolean";
+		}
+
+		// Fall back to string mapping
+		return "string";
 	}
 }
