@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.elasticsearch.common.xcontent.XContentBuilder;
 
@@ -140,6 +141,48 @@ public class EmbeddedFieldMapper<M> extends AbstractFieldMapper<M> {
 				builder.endObject();
 				break;
 			}
+		}
+	}
+
+	@Override
+	public boolean inflate(M model, Map<String, Object> map, String prefix) {
+		String name = getFieldName();
+
+		// Create new target instance
+		Object value = ReflectionUtil.newInstance(getFieldType());
+
+		// Keep track if we found any field (indicator of non-null output)
+		boolean nonNullValue = false;
+
+		switch (embed.mode()) {
+		case embedded:
+			String prefixToUse = (prefix != null) ? prefix + this.prefix : this.prefix;
+			for (FieldMapper<Object> mapper : fields) {
+				if (mapper.inflate(value, map, prefixToUse)) {
+					nonNullValue = true;
+				}
+			}
+			break;
+		case object:
+		case nested:
+			Object input = map.get(name);
+			if (input != null) {
+				Map<String, Object> nestedMap = (Map<String, Object>) input;
+
+				for (FieldMapper<Object> mapper : fields) {
+					mapper.inflate(value, nestedMap, null);
+				}
+
+				nonNullValue = true;
+			}
+			break;
+		}
+
+		if (nonNullValue) {
+			ReflectionUtil.setFieldValue(model, name, value);
+			return true;
+		} else {
+			return false;
 		}
 	}
 

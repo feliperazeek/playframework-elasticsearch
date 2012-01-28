@@ -74,11 +74,20 @@ public abstract class AbstractFieldMapper<M> implements FieldMapper<M> {
 	}
 
 	/**
+	 * Gets the field type for the field we represent
+	 * 
+	 * @return
+	 */
+	protected Class<?> getFieldType() {
+		return field.getType();
+	}
+
+	/**
 	 * Gets the ElasticSearch field type for the field we represent
 	 * 
 	 * @return
 	 */
-	protected String getFieldType() {
+	protected String getIndexType() {
 		if (meta != null && meta.type().length() > 0) {
 			// Type was explicitly set, use it
 			return meta.type();

@@ -6,6 +6,7 @@ import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.elasticsearch.common.xcontent.XContentBuilder;
 
@@ -107,6 +108,49 @@ public class CollectionFieldMapper<M> extends AbstractFieldMapper<M> {
 			}
 
 			builder.endArray();
+		}
+	}
+
+	@Override
+	public boolean inflate(M model, Map<String, Object> map, String prefix) {
+		String name = getFieldName();
+		final List<Object> input = (List<Object>) map.get(name);
+		final Collection<Object> output = (Collection<Object>) getFieldValue(model);
+		final Class<?> type = getCollectionType();
+
+		// If we have input and output, continue
+		if (input != null && output != null) {
+			if (nestedMode) {
+				// Embedded mode uses mapping
+				for (Object inputItem : input) {
+					// Fetch input item fields
+					Map<String, Object> inputItemFields = (Map<String, Object>) inputItem;
+
+					// Create new target instance
+					Object outputItem = ReflectionUtil.newInstance(type);
+
+					for (FieldMapper<Object> mapper : fields) {
+						mapper.inflate(outputItem, inputItemFields, null);
+					}
+
+					output.add(outputItem);
+				}
+			} else {
+				// Flat mode uses primitive values or toString
+				for (Object inputItem : input) {
+					// Try to convert
+					Object outputItem = MappingUtil.convertValue(inputItem, type);
+
+					// This should only succeed for simple types
+					if (type.isAssignableFrom(outputItem.getClass())) {
+						output.add(outputItem);
+					}
+				}
+			}
+
+			return true;
+		} else {
+			return false;
 		}
 	}
 

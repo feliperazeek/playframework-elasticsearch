@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.persistence.Transient;
 
@@ -145,6 +146,17 @@ public class PlayModelMapper<M extends Model> implements ModelMapper<M> {
 		}
 
 		builder.endObject();
+	}
+
+	@Override
+	public M createModel(Map<String, Object> map) {
+		M model = ReflectionUtil.newInstance(clazz);
+
+		for (FieldMapper<M> field : mapping) {
+			field.inflate(model, map, null);
+		}
+
+		return model;
 	}
 
 }

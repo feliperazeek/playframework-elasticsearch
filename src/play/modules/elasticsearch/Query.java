@@ -16,7 +16,8 @@ import play.Logger;
 import play.db.Model;
 import play.modules.elasticsearch.search.SearchResults;
 import play.modules.elasticsearch.transformer.JPATransformer;
-import play.modules.elasticsearch.transformer.Transformer;
+import play.modules.elasticsearch.transformer.MapperTransformer;
+import play.modules.elasticsearch.transformer.SimpleTransformer;
 
 /**
  * An elastic search query
@@ -35,6 +36,7 @@ public class Query<T extends Model> {
 	private int size = -1;
 
 	private boolean hydrate = false;
+	private boolean useMapper = false;
 
 	Query(Class<T> clazz, QueryBuilder builder) {
 		Validate.notNull(clazz, "clazz cannot be null");
@@ -80,6 +82,19 @@ public class Query<T extends Model> {
 	 */
 	public Query<T> hydrate(boolean hydrate) {
 		this.hydrate = hydrate;
+
+		return this;
+	}
+
+	/**
+	 * Controls the usage of mapper
+	 * 
+	 * @param useMapper
+	 *            use mapper during result processing
+	 * @return self
+	 */
+	public Query<T> useMapper(boolean useMapper) {
+		this.useMapper = useMapper;
 
 		return this;
 	}
@@ -168,9 +183,11 @@ public class Query<T extends Model> {
 		SearchResponse searchResponse = request.execute().actionGet();
 		SearchResults<T> searchResults = null;
 		if (hydrate) {
-			searchResults = JPATransformer.toSearchResults(searchResponse, clazz);
+			searchResults = new JPATransformer<T>().toSearchResults(searchResponse, clazz);
+		} else if (useMapper) {
+			searchResults = new MapperTransformer<T>().toSearchResults(searchResponse, clazz);
 		} else {
-			searchResults = Transformer.toSearchResults(searchResponse, clazz);
+			searchResults = new SimpleTransformer<T>().toSearchResults(searchResponse, clazz);
 		}
 		return searchResults;
 	}
