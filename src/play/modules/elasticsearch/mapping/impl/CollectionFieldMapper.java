@@ -70,7 +70,7 @@ public class CollectionFieldMapper<M> extends AbstractFieldMapper<M> {
 			builder.endObject();
 		} else {
 			// Flat mode (array of primitives)
-			addField(field.getName(), type, meta, builder);
+			addField(field.getName(), type, builder);
 		}
 	}
 

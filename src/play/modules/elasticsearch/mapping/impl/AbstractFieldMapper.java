@@ -42,8 +42,7 @@ public abstract class AbstractFieldMapper<M> implements FieldMapper<M> {
 	 *            the content builder
 	 * @throws IOException
 	 */
-	protected static void addField(String name, String type, ElasticSearchField meta,
-			XContentBuilder builder) throws IOException {
+	protected void addField(String name, String type, XContentBuilder builder) throws IOException {
 		// We need at least a type
 		if (type != null) {
 			builder.startObject(name);
@@ -64,7 +63,7 @@ public abstract class AbstractFieldMapper<M> implements FieldMapper<M> {
 		}
 	}
 
-	protected static String detectFieldType(Class<?> clazz) {
+	protected String detectFieldType(Class<?> clazz) {
 		// Core types
 		if (String.class.isAssignableFrom(clazz)) {
 			return "string";

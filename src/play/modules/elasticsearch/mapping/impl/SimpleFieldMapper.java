@@ -25,9 +25,9 @@ public class SimpleFieldMapper<M> extends AbstractFieldMapper<M> {
 		String type = getFieldType();
 
 		if (prefix != null) {
-			addField(prefix + name, type, meta, builder);
+			addField(prefix + name, type, builder);
 		} else {
-			addField(name, type, meta, builder);
+			addField(name, type, builder);
 		}
 	}
 
