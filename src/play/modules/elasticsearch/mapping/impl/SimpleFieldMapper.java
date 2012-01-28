@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.elasticsearch.common.xcontent.XContentBuilder;
 
+import play.modules.elasticsearch.mapping.MappingUtil;
 import play.modules.elasticsearch.util.ReflectionUtil;
 
 /**
@@ -16,45 +17,37 @@ import play.modules.elasticsearch.util.ReflectionUtil;
  */
 public class SimpleFieldMapper<M> extends AbstractFieldMapper<M> {
 
-	public SimpleFieldMapper(Field field) {
-		super(field);
+	public SimpleFieldMapper(Field field, String prefix) {
+		super(field, prefix);
 	}
 
 	@Override
-	public void addToMapping(XContentBuilder builder, String prefix) throws IOException {
-		String name = getFieldName();
+	public void addToMapping(XContentBuilder builder) throws IOException {
+		String field = getIndexField();
 		String type = getIndexType();
 
-		if (prefix != null) {
-			addField(prefix + name, type, builder);
-		} else {
-			addField(name, type, builder);
-		}
+		MappingUtil.addField(builder, field, type, meta);
 	}
 
 	@Override
-	public void addToDocument(M model, XContentBuilder builder, String prefix) throws IOException {
-		String name = getFieldName();
+	public void addToDocument(M model, XContentBuilder builder) throws IOException {
+		String field = getIndexField();
 		Object value = getFieldValue(model);
 
 		if (value != null) {
-			if (prefix != null) {
-				builder.field(prefix + name, value);
-			} else {
-				builder.field(name, value);
-			}
+			builder.field(field, value);
 		}
 	}
 
 	@Override
-	public boolean inflate(M model, Map<String, Object> map, String prefix) {
-		String name = getFieldName();
-		String indexName = (prefix != null) ? prefix + name : name;
+	public boolean inflate(M model, Map<String, Object> map) {
+		String modelFieldName = getFieldName();
+		String indexFieldName = getIndexField();
 
-		if (map.containsKey(name)) {
-			Object value = map.get(indexName);
+		if (map.containsKey(indexFieldName)) {
+			Object value = map.get(indexFieldName);
 			if (value != null) {
-				ReflectionUtil.setFieldValue(model, name, value);
+				ReflectionUtil.setFieldValue(model, modelFieldName, value);
 				return true;
 			}
 		}

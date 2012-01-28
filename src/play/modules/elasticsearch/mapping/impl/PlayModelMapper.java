@@ -130,7 +130,7 @@ public class PlayModelMapper<M extends Model> implements ModelMapper<M> {
 		builder.startObject("properties");
 
 		for (FieldMapper<M> field : mapping) {
-			field.addToMapping(builder, null);
+			field.addToMapping(builder);
 		}
 
 		builder.endObject();
@@ -142,7 +142,7 @@ public class PlayModelMapper<M extends Model> implements ModelMapper<M> {
 		builder.startObject();
 
 		for (FieldMapper<M> field : mapping) {
-			field.addToDocument(model, builder, null);
+			field.addToDocument(model, builder);
 		}
 
 		builder.endObject();
@@ -153,7 +153,7 @@ public class PlayModelMapper<M extends Model> implements ModelMapper<M> {
 		M model = ReflectionUtil.newInstance(clazz);
 
 		for (FieldMapper<M> field : mapping) {
-			field.inflate(model, map, null);
+			field.inflate(model, map);
 		}
 
 		return model;

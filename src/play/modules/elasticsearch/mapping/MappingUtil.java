@@ -5,10 +5,14 @@ import java.lang.annotation.Annotation;
 import java.math.BigDecimal;
 import java.util.Date;
 
+import org.apache.commons.lang.Validate;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 
 import play.Logger;
+import play.modules.elasticsearch.annotations.ElasticSearchField;
+import play.modules.elasticsearch.annotations.ElasticSearchField.Index;
+import play.modules.elasticsearch.annotations.ElasticSearchField.Store;
 import play.modules.elasticsearch.util.ExceptionUtil;
 
 public abstract class MappingUtil {
@@ -55,6 +59,40 @@ public abstract class MappingUtil {
 		builder.endObject();
 
 		return builder;
+	}
+
+	/**
+	 * Adds a field to the content builder
+	 * 
+	 * @param builder
+	 *            the content builder
+	 * @param name
+	 *            the field name
+	 * @param type
+	 *            the field type
+	 * @param meta
+	 *            the ElasticSearchField annotation (optional) *
+	 * @throws IOException
+	 */
+	public static void addField(XContentBuilder builder, String name, String type,
+			ElasticSearchField meta) throws IOException {
+		Validate.notEmpty(name, "name cannot be empty");
+		Validate.notEmpty(type, "type cannot be empty");
+
+		builder.startObject(name);
+		builder.field("type", type);
+
+		// Check for other settings
+		if (meta != null) {
+			if (meta.index() != Index.NOT_SET) {
+				builder.field("index", meta.index().toString());
+			}
+			if (meta.store() != Store.NOT_SET) {
+				builder.field("store", meta.store().toString());
+			}
+		}
+
+		builder.endObject();
 	}
 
 	/**

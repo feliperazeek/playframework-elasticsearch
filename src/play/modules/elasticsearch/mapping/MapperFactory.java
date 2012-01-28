@@ -52,14 +52,32 @@ public class MapperFactory {
 	 */
 	public static <M> FieldMapper<M> getMapper(Field field) throws MappingException {
 
+		return getMapper(field, null);
+
+	}
+
+	/**
+	 * Gets a {@link FieldMapper} for the specified field, using a prefix in the
+	 * index
+	 * 
+	 * @param <M>
+	 *            the model type
+	 * @param field
+	 *            the field
+	 * @throws MappingException
+	 *             in case of mapping problems
+	 * @return the field mapper
+	 */
+	public static <M> FieldMapper<M> getMapper(Field field, String prefix) throws MappingException {
+
 		if (Collection.class.isAssignableFrom(field.getType())) {
-			return new CollectionFieldMapper<M>(field);
+			return new CollectionFieldMapper<M>(field, prefix);
 
 		} else if (field.isAnnotationPresent(ElasticSearchEmbedded.class)) {
-			return new EmbeddedFieldMapper<M>(field);
+			return new EmbeddedFieldMapper<M>(field, prefix);
 
 		} else {
-			return new SimpleFieldMapper<M>(field);
+			return new SimpleFieldMapper<M>(field, prefix);
 
 		}
 

@@ -29,8 +29,8 @@ public class CollectionFieldMapper<M> extends AbstractFieldMapper<M> {
 	private final String type;
 	private final List<FieldMapper<Object>> fields;
 
-	public CollectionFieldMapper(Field field) {
-		super(field);
+	public CollectionFieldMapper(Field field, String prefix) {
+		super(field, prefix);
 
 		if (!Collection.class.isAssignableFrom(field.getType())) {
 			throw new MappingException("field must be of Collection type");
@@ -39,18 +39,20 @@ public class CollectionFieldMapper<M> extends AbstractFieldMapper<M> {
 		ElasticSearchEmbedded embed = field.getAnnotation(ElasticSearchEmbedded.class);
 		nestedMode = (embed != null);
 
+		// Detect object type in collection
+		type = MappingUtil.detectFieldType(getCollectionType());
+
 		// Find fields to use for embedded objects
-		fields = new ArrayList<FieldMapper<Object>>();
 		if (nestedMode) {
 			Class<?> itemClass = getCollectionType();
-			type = MappingUtil.detectFieldType(itemClass);
 			List<Field> fieldsToIndex = EmbeddedFieldMapper.getFieldsToIndex(itemClass, embed);
+			fields = new ArrayList<FieldMapper<Object>>();
 
 			for (Field embeddedField : fieldsToIndex) {
 				fields.add(MapperFactory.getMapper(embeddedField));
 			}
 		} else {
-			type = MappingUtil.detectFieldType(getCollectionType());
+			fields = null;
 		}
 	}
 
@@ -60,36 +62,38 @@ public class CollectionFieldMapper<M> extends AbstractFieldMapper<M> {
 	}
 
 	@Override
-	public void addToMapping(XContentBuilder builder, String prefix) throws IOException {
+	public void addToMapping(XContentBuilder builder) throws IOException {
+		String indexFieldName = getIndexField();
+
 		if (nestedMode) {
 			// Embedded mode
-			builder.startObject(field.getName());
+			builder.startObject(indexFieldName);
 			builder.startObject("properties");
 			for (FieldMapper<?> mapper : fields) {
-				mapper.addToMapping(builder, null);
+				mapper.addToMapping(builder);
 			}
 			builder.endObject();
 			builder.endObject();
 		} else {
 			// Flat mode (array of primitives)
-			addField(field.getName(), type, builder);
+			MappingUtil.addField(builder, indexFieldName, type, meta);
 		}
 	}
 
 	@Override
-	public void addToDocument(M model, XContentBuilder builder, String prefix) throws IOException {
-		String name = field.getName();
+	public void addToDocument(M model, XContentBuilder builder) throws IOException {
+		String indexFieldName = getIndexField();
 		Collection<?> value = (Collection<?>) ReflectionUtil.getFieldValue(model, field);
 
 		if (value != null) {
-			builder.startArray(name);
+			builder.startArray(indexFieldName);
 
 			if (nestedMode) {
 				// Embedded mode uses mapping
 				for (Object object : (Collection<?>) value) {
 					builder.startObject();
 					for (FieldMapper<Object> mapper : fields) {
-						mapper.addToDocument(object, builder, null);
+						mapper.addToDocument(object, builder);
 					}
 					builder.endObject();
 				}
@@ -112,38 +116,38 @@ public class CollectionFieldMapper<M> extends AbstractFieldMapper<M> {
 	}
 
 	@Override
-	public boolean inflate(M model, Map<String, Object> map, String prefix) {
-		String name = getFieldName();
-		final List<Object> input = (List<Object>) map.get(name);
-		final Collection<Object> output = (Collection<Object>) getFieldValue(model);
+	public boolean inflate(M model, Map<String, Object> map) {
+		String indexFieldName = getIndexField();
+		final List<Object> indexValue = (List<Object>) map.get(indexFieldName);
+		final Collection<Object> modelValue = (Collection<Object>) getFieldValue(model);
 		final Class<?> type = getCollectionType();
 
 		// If we have input and output, continue
-		if (input != null && output != null) {
+		if (indexValue != null && modelValue != null) {
 			if (nestedMode) {
 				// Embedded mode uses mapping
-				for (Object inputItem : input) {
+				for (Object indexItem : indexValue) {
 					// Fetch input item fields
-					Map<String, Object> inputItemFields = (Map<String, Object>) inputItem;
+					Map<String, Object> indexItemMap = (Map<String, Object>) indexItem;
 
 					// Create new target instance
 					Object outputItem = ReflectionUtil.newInstance(type);
 
 					for (FieldMapper<Object> mapper : fields) {
-						mapper.inflate(outputItem, inputItemFields, null);
+						mapper.inflate(outputItem, indexItemMap);
 					}
 
-					output.add(outputItem);
+					modelValue.add(outputItem);
 				}
 			} else {
 				// Flat mode uses primitive values or toString
-				for (Object inputItem : input) {
+				for (Object indexItem : indexValue) {
 					// Try to convert
-					Object outputItem = MappingUtil.convertValue(inputItem, type);
+					Object modelItem = MappingUtil.convertValue(indexItem, type);
 
 					// This should only succeed for simple types
-					if (type.isAssignableFrom(outputItem.getClass())) {
-						output.add(outputItem);
+					if (type.isAssignableFrom(modelItem.getClass())) {
+						modelValue.add(modelItem);
 					}
 				}
 			}
