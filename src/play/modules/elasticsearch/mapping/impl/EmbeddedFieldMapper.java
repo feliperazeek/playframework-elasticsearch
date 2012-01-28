@@ -10,6 +10,7 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 import play.modules.elasticsearch.annotations.ElasticSearchEmbedded;
 import play.modules.elasticsearch.mapping.FieldMapper;
 import play.modules.elasticsearch.mapping.MapperFactory;
+import play.modules.elasticsearch.mapping.MappingException;
 import play.modules.elasticsearch.util.ReflectionUtil;
 import scala.actors.threadpool.Arrays;
 
@@ -47,10 +48,28 @@ public class EmbeddedFieldMapper<M> extends AbstractFieldMapper<M> {
 	static List<Field> getFieldsToIndex(Class<?> clazz, ElasticSearchEmbedded meta) {
 		@SuppressWarnings("unchecked")
 		List<String> fieldsToIndex = Arrays.asList(meta.fields());
+		List<Field> clazzFields = ReflectionUtil.getAllFields(clazz);
 		List<Field> fields = new ArrayList<Field>();
 
+		// Make sure the user has not requested unknown fields
+		if (fieldsToIndex.size() > 0) {
+			for (String fieldName : fieldsToIndex) {
+				boolean knownField = false;
+				for (Field clazzField : clazzFields) {
+					if (clazzField.getName().equals(fieldName)) {
+						knownField = true;
+						break;
+					}
+				}
+
+				if (!knownField) {
+					throw new MappingException("Unknown field specified in " + meta);
+				}
+			}
+		}
+
 		// Set up fields
-		for (Field embeddedField : ReflectionUtil.getAllFields(clazz)) {
+		for (Field embeddedField : clazzFields) {
 			if (PlayModelMapper.shouldIgnoreField(embeddedField)) {
 				continue;
 			}
