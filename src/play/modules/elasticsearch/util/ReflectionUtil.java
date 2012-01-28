@@ -19,21 +19,19 @@
 package play.modules.elasticsearch.util;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.elasticsearch.common.xcontent.XContentBuilder;
-
 import play.Logger;
+import play.modules.elasticsearch.mapping.MappingUtil;
 
 /**
  * The Class ReflectionUtil.
@@ -46,6 +44,9 @@ public abstract class ReflectionUtil {
 	/** The Constant classFieldsCache. */
 	private static final ConcurrentMap<String, List<Field>> classFieldsCache = new ConcurrentHashMap<String, List<Field>>();
 
+	/** Constructor cache */
+	private static final ConcurrentMap<Class<?>, Constructor<?>> classConstructorCache = new ConcurrentHashMap<Class<?>, Constructor<?>>();
+
 	/**
 	 * Instantiates a new reflection util.
 	 */
@@ -56,6 +57,7 @@ public abstract class ReflectionUtil {
 	public static void clearCache() {
 		annotationFieldsCache.clear();
 		classFieldsCache.clear();
+		classConstructorCache.clear();
 	}
 
 	/**
@@ -222,12 +224,8 @@ public abstract class ReflectionUtil {
 		Class<?> clazz;
 		try {
 			clazz = Class.forName(className);
-			return clazz.newInstance();
+			return newInstance(clazz);
 		} catch (ClassNotFoundException e) {
-			throw new RuntimeException(e);
-		} catch (InstantiationException e) {
-			throw new RuntimeException(e);
-		} catch (IllegalAccessException e) {
 			throw new RuntimeException(e);
 		}
 	}
@@ -242,10 +240,37 @@ public abstract class ReflectionUtil {
 	 * @return the t
 	 */
 	public static <T> T newInstance(Class<T> clazz) {
-		try {
-			return clazz.newInstance();
-		} catch (Exception e) {
-			throw new RuntimeException(e);
+		Constructor<T> ctor = null;
+
+		if (classConstructorCache.containsKey(clazz)) {
+			ctor = (Constructor<T>) classConstructorCache.get(clazz);
+		} else {
+			// Try public ctor first
+			try {
+				ctor = clazz.getConstructor();
+			} catch (Exception e) {
+				// Swallow, no public ctor
+			}
+
+			// Next, try non-public ctor
+			try {
+				ctor = clazz.getDeclaredConstructor();
+				ctor.setAccessible(true);
+			} catch (Exception e) {
+				// Swallow, no non-public ctor
+			}
+
+			classConstructorCache.put(clazz, ctor);
+		}
+
+		if (ctor != null) {
+			try {
+				return ctor.newInstance();
+			} catch (Exception e) {
+				throw new RuntimeException("Cannot instantiate " + clazz, e);
+			}
+		} else {
+			throw new RuntimeException("No default constructor for " + clazz);
 		}
 	}
 
@@ -390,50 +415,8 @@ public abstract class ReflectionUtil {
 		Class<?> fieldClass = (Class<?>) type;
 
 		try {
-			if (fieldClass.equals(value.getClass())) {
-				// Types match
-				field.set(object, value);
-			} else {
-				// Types do not match, perform conversion where needed
-				if (fieldClass.equals(String.class)) {
-					field.set(object, value.toString());
-				} else if (fieldClass.equals(BigDecimal.class)) {
-					field.set(object, new BigDecimal(value.toString()));
-				} else if (fieldClass.equals(Date.class)) {
-					field.set(object, convertToDate(value));
-
-					// Use Number intermediary where possible
-				} else if (fieldClass.equals(Integer.class)) {
-					if (value instanceof Number) {
-						field.set(object, Integer.valueOf(((Number) value).intValue()));
-					} else {
-						field.set(object, Integer.valueOf(value.toString()));
-					}
-				} else if (fieldClass.equals(Long.class)) {
-					if (value instanceof Number) {
-						field.set(object, Long.valueOf(((Number) value).longValue()));
-					} else {
-						field.set(object, Long.valueOf(value.toString()));
-					}
-				} else if (fieldClass.equals(Double.class)) {
-					if (value instanceof Number) {
-						field.set(object, Double.valueOf(((Number) value).doubleValue()));
-					} else {
-						field.set(object, Double.valueOf(value.toString()));
-					}
-				} else if (fieldClass.equals(Float.class)) {
-					if (value instanceof Number) {
-						field.set(object, Float.valueOf(((Number) value).floatValue()));
-					} else {
-						field.set(object, Float.valueOf(value.toString()));
-					}
-
-					// Fallback to simply trying to set the field
-				} else {
-					field.set(object, value);
-				}
-			}
-
+			value = MappingUtil.convertValue(value, fieldClass);
+			field.set(object, value);
 		} catch (IllegalArgumentException e) {
 			Logger.error(ExceptionUtil.getStackTrace(e));
 		} catch (IllegalAccessException e) {
@@ -528,51 +511,6 @@ public abstract class ReflectionUtil {
 	 */
 	public static boolean isConcrete(Class<?> clazz) {
 		return !(isInterface(clazz) || isAbstract(clazz));
-	}
-
-	/**
-	 * Convert to date.
-	 * 
-	 * @param value
-	 *            the value
-	 * @return the date
-	 */
-	private static Date convertToDate(Object value) {
-		Date date = null;
-		if (value != null && !"".equals(value)) {
-			if (value instanceof Long) {
-				date = new Date(((Long) value).longValue());
-
-			} else if (value instanceof String) {
-				String val = (String) value;
-				int dateLength = String.valueOf(Long.MAX_VALUE).length();
-				if (dateLength == val.length()) {
-					date = new Date(Long.valueOf(val).longValue());
-				} else {
-					date = getDate(val);
-				}
-			} else {
-				date = (Date) value;
-			}
-		}
-		return date;
-	}
-
-	/**
-	 * Gets the date.
-	 * 
-	 * @param val
-	 *            the val
-	 * @return the date
-	 */
-	private static Date getDate(String val) {
-		try {
-			// Use ES internal converter
-			return XContentBuilder.defaultDatePrinter.parseDateTime(val).toDate();
-		} catch (Throwable t) {
-			Logger.error(ExceptionUtil.getStackTrace(t), val);
-		}
-		return null;
 	}
 
 	/**

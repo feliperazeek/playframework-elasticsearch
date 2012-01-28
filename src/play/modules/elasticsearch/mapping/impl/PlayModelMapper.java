@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.persistence.Transient;
 
@@ -129,7 +130,7 @@ public class PlayModelMapper<M extends Model> implements ModelMapper<M> {
 		builder.startObject("properties");
 
 		for (FieldMapper<M> field : mapping) {
-			field.addToMapping(builder, null);
+			field.addToMapping(builder);
 		}
 
 		builder.endObject();
@@ -141,10 +142,21 @@ public class PlayModelMapper<M extends Model> implements ModelMapper<M> {
 		builder.startObject();
 
 		for (FieldMapper<M> field : mapping) {
-			field.addToDocument(model, builder, null);
+			field.addToDocument(model, builder);
 		}
 
 		builder.endObject();
+	}
+
+	@Override
+	public M createModel(Map<String, Object> map) {
+		M model = ReflectionUtil.newInstance(clazz);
+
+		for (FieldMapper<M> field : mapping) {
+			field.inflate(model, map);
+		}
+
+		return model;
 	}
 
 }

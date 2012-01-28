@@ -1,6 +1,7 @@
 package play.modules.elasticsearch.mapping;
 
 import java.io.IOException;
+import java.util.Map;
 
 import org.elasticsearch.common.xcontent.XContentBuilder;
 
@@ -61,4 +62,12 @@ public interface ModelMapper<M> {
 	 * @throws IOException
 	 */
 	public void addModel(M model, XContentBuilder builder) throws IOException;
+
+	/**
+	 * Inflates a new model from a map of values
+	 * 
+	 * @param map
+	 * @return
+	 */
+	public M createModel(Map<String, Object> map);
 }
