@@ -19,10 +19,10 @@ import play.modules.elasticsearch.search.SearchResults;
  * Transforms ES SearchResponse to a list of hydrated entities
  * 
  * @author Bas
- *
+ * 
  */
-public class JPATransformer {
-	
+public class JPATransformer<T extends Model> implements Transformer<T> {
+
 	/**
 	 * To search results.
 	 * 
@@ -34,8 +34,7 @@ public class JPATransformer {
 	 *            the clazz
 	 * @return the search results
 	 */
-	public static <T extends Model> SearchResults<T> toSearchResults(
-			SearchResponse searchResponse, Class<T> clazz) {
+	public SearchResults<T> toSearchResults(SearchResponse searchResponse, Class<T> clazz) {
 		// Get Total Records Found
 		long count = searchResponse.hits().totalHits();
 
@@ -48,28 +47,30 @@ public class JPATransformer {
 		for (SearchHit h : searchResponse.hits()) {
 			try {
 				ids.add(Binder.directBind(h.getId(), keyType));
-	        } catch (Exception e) {
-	            throw new UnexpectedException("Could not convert the ID from index to corresponding type", e);
-	        }
+			} catch (Exception e) {
+				throw new UnexpectedException(
+						"Could not convert the ID from index to corresponding type", e);
+			}
 		}
-		
+
 		Logger.debug("Model IDs returned by ES: %s", ids);
 
 		List<T> objects = null;
-		
-		if( ids.size() > 0 ) {
+
+		if (ids.size() > 0) {
 			// Fetch JPA entities from database while preserving ES result order
 			objects = loadFromDb(clazz, ids);
 			sortByIds(objects, ids);
-			
+
 			// Make sure all items exist in the database
-			if( objects.size() != ids.size() ) {
-				throw new IllegalStateException("Please re-index, not all indexed items are available in the database");
+			if (objects.size() != ids.size()) {
+				throw new IllegalStateException(
+						"Please re-index, not all indexed items are available in the database");
 			}
 		} else {
 			objects = Collections.emptyList();
 		}
-		
+
 		Logger.debug("Models after sorting: %s", objects);
 
 		// Return Results
@@ -86,14 +87,15 @@ public class JPATransformer {
 	 */
 	private static <T extends Model> List<T> loadFromDb(Class<T> clazz, List<Object> ids) {
 		// JPA maps the "id" field to the key automatically
-		List<T> objects = JPQL.instance.find(clazz.getName(), "id in (?1)",
-				new Object[] { ids }).fetch();
+		List<T> objects = JPQL.instance.find(clazz.getName(), "id in (?1)", new Object[] { ids })
+				.fetch();
 
 		return objects;
 	}
 
 	/**
-	 * Sort list of objects according to the order of their keys as defined by ids
+	 * Sort list of objects according to the order of their keys as defined by
+	 * ids
 	 * 
 	 * @param <T>
 	 * @param objects
