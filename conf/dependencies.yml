@@ -5,7 +5,7 @@ self: play -> elasticsearch 0.5
 require:
     - play
     - play -> crud
-    - org.elasticsearch -> elasticsearch 0.18.5
+    - org.elasticsearch -> elasticsearch 0.19.3
     - se.scalablesolutions.akka -> akka-amqp 1.1.2
     
     
@@ -18,6 +18,6 @@ repositories:
             
     - akka:
         type: iBiblio
-        root: "http://akka.io/repository/"
+        root: "http://repo.typesafe.com/typesafe/akka-releases-cache/"
         contains:
             - se.scalablesolutions.akka -> *
