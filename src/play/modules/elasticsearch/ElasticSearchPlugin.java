@@ -169,6 +169,8 @@ public class ElasticSearchPlugin extends PlayPlugin {
 					throw new RuntimeException("Invalid Host: " + host);
 				}
 				Logger.info("Transport Client - Host: %s Port: %s", parts[0], parts[1]);
+				if(Integer.valueOf(parts[1]) == 9200)
+					Logger.info("Note: Port 9200 is usually used by the HTTP Transport. You might want to use 9300 instead.");
 				c.addTransportAddress(new InetSocketTransportAddress(parts[0], Integer.valueOf(parts[1])));
 				done = true;
 			}
