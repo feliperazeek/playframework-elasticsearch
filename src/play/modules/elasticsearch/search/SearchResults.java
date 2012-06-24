@@ -36,9 +36,16 @@ public class SearchResults<T extends Model> {
 
 	/** The objects. */
 	public List<T> objects;
-	
-	/** The facets. */
+
+    /** The result scores (same order as the objects). */
+    public List<Float> scores;
+
+    /** The sort values (same order as the objects). */
+    public List<Object[]> sortValues;
+
+    /** The facets. */
 	public Facets facets;
+
 
 	/**
 	 * Instantiates a new search results.
@@ -48,9 +55,15 @@ public class SearchResults<T extends Model> {
 	 * @param facets the facets
 	 */
 	public SearchResults(long totalCount, List<T> objects, Facets facets) {
-		this.totalCount = totalCount;
-		this.objects = objects;
-		this.facets = facets;
+        this(totalCount, objects, null, null, facets);
 	}
+
+    public SearchResults(long totalCount, List<T> objects, List<Float> scores, List<Object[]> sortValues, Facets facets) {
+        this.totalCount = totalCount;
+        this.objects = objects;
+        this.scores = scores;
+        this.sortValues = sortValues;
+        this.facets = facets;
+    }
 
 }
