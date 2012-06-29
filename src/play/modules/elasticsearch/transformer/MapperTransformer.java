@@ -63,7 +63,10 @@ public class MapperTransformer<T extends Model> implements Transformer<T> {
 
 		// Init List
 		List<T> objects = new ArrayList<T>();
-		ModelMapper<T> mapper = ElasticSearchPlugin.getMapper(clazz);
+        List<Float> scores = new ArrayList<Float>();
+        List<Object[]> sortValues = new ArrayList<Object[]>();
+
+        ModelMapper<T> mapper = ElasticSearchPlugin.getMapper(clazz);
 
 		// Loop on each one
 		for (SearchHit h : searchResponse.hits()) {
@@ -77,10 +80,12 @@ public class MapperTransformer<T extends Model> implements Transformer<T> {
 			// Log Debug
 			Logger.debug("Model Instance: %s", o);
 			objects.add(o);
-		}
+            scores.add(h.score());
+            sortValues.add(h.sortValues());
+        }
 
 		// Return Results
-		return new SearchResults<T>(count, objects, searchResponse.facets());
+		return new SearchResults<T>(count, objects, scores, sortValues, searchResponse.facets());
 	}
 
 }

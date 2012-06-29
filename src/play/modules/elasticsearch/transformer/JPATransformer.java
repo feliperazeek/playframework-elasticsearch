@@ -44,6 +44,8 @@ public class JPATransformer<T extends Model> implements Transformer<T> {
 
 		// Loop on each one
 		List<Object> ids = new ArrayList<Object>();
+        List<Float> scores = new ArrayList<Float>();
+        List<Object[]> sortValues = new ArrayList<Object[]>();
 		for (SearchHit h : searchResponse.hits()) {
 			try {
 				ids.add(Binder.directBind(h.getId(), keyType));
@@ -51,7 +53,9 @@ public class JPATransformer<T extends Model> implements Transformer<T> {
 				throw new UnexpectedException(
 						"Could not convert the ID from index to corresponding type", e);
 			}
-		}
+            scores.add(h.score());
+            sortValues.add(h.sortValues());
+        }
 
 		Logger.debug("Model IDs returned by ES: %s", ids);
 
@@ -74,7 +78,7 @@ public class JPATransformer<T extends Model> implements Transformer<T> {
 		Logger.debug("Models after sorting: %s", objects);
 
 		// Return Results
-		return new SearchResults<T>(count, objects, searchResponse.facets());
+		return new SearchResults<T>(count, objects, scores, sortValues, searchResponse.facets());
 	}
 
 	/**
