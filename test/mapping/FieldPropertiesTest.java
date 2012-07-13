@@ -10,7 +10,6 @@ import play.modules.elasticsearch.annotations.ElasticSearchField;
 import play.modules.elasticsearch.annotations.ElasticSearchField.Index;
 import play.modules.elasticsearch.annotations.ElasticSearchField.Store;
 import play.modules.elasticsearch.annotations.ElasticSearchable;
-import play.modules.elasticsearch.mapping.MapperFactory;
 import play.modules.elasticsearch.mapping.ModelMapper;
 
 /**
@@ -27,7 +26,7 @@ public class FieldPropertiesTest extends MappingTest {
 
 	@Test
 	public void testFieldProperties() throws IOException {
-		ModelMapper<TestModel> mapper = MapperFactory.getMapper(TestModel.class);
+		ModelMapper<TestModel> mapper = getMapper(TestModel.class);
 		assertNotNull(mapper);
 
 		// Get generated mapping

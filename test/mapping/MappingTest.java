@@ -7,6 +7,7 @@ import org.elasticsearch.common.xcontent.XContentFactory;
 
 import play.modules.elasticsearch.mapping.MappingException;
 import play.modules.elasticsearch.mapping.ModelMapper;
+import play.modules.elasticsearch.mapping.impl.DefaultMapperFactory;
 import play.test.UnitTest;
 
 public abstract class MappingTest extends UnitTest {
@@ -36,5 +37,19 @@ public abstract class MappingTest extends UnitTest {
 		builder.endObject();
 
 		return builder;
+	}
+
+	/**
+	 * Retrieves a mapper for the given class
+	 * 
+	 * @param <M>
+	 *            the model type
+	 * @param clazz
+	 *            the model class
+	 * @return the model mapper
+	 * @throws MappingException
+	 */
+	protected static <M> ModelMapper<M> getMapper(Class<M> clazz) throws MappingException {
+		return new DefaultMapperFactory().getMapper(clazz);
 	}
 }

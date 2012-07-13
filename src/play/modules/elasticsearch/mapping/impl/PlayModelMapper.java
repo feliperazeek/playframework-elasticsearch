@@ -41,13 +41,13 @@ public class PlayModelMapper<M extends Model> implements ModelMapper<M> {
 	private final ElasticSearchable meta;
 	private final List<FieldMapper<M>> mapping;
 
-	public PlayModelMapper(Class<M> clazz) {
+	public PlayModelMapper(MapperFactory factory, Class<M> clazz) {
 		Validate.notNull(clazz, "Clazz cannot be null");
 		this.clazz = clazz;
 		this.meta = clazz.getAnnotation(ElasticSearchable.class);
 
 		// Create mapping
-		mapping = getMapping(clazz);
+		mapping = getMapping(factory, clazz);
 	}
 
 	static boolean shouldIgnoreField(Field field) {
@@ -77,11 +77,14 @@ public class PlayModelMapper<M extends Model> implements ModelMapper<M> {
 	 * 
 	 * @param <M>
 	 *            the model type
+	 * @param factory
+	 *            the mapper factory
 	 * @param clazz
 	 *            the model class
 	 * @return the list of FieldMappers
 	 */
-	private static final <M extends Model> List<FieldMapper<M>> getMapping(Class<M> clazz) {
+	private static final <M extends Model> List<FieldMapper<M>> getMapping(MapperFactory factory,
+			Class<M> clazz) {
 		List<FieldMapper<M>> mapping = new ArrayList<FieldMapper<M>>();
 
 		List<Field> indexableFields = ReflectionUtil.getAllFields(clazz);
@@ -93,7 +96,7 @@ public class PlayModelMapper<M extends Model> implements ModelMapper<M> {
 				continue;
 			}
 
-			FieldMapper<M> mapper = MapperFactory.getMapper(field);
+			FieldMapper<M> mapper = factory.getMapper(field);
 			mapping.add(mapper);
 		}
 
