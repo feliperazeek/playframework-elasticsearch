@@ -29,7 +29,7 @@ public class CollectionFieldMapper<M> extends AbstractFieldMapper<M> {
 	private final String type;
 	private final List<FieldMapper<Object>> fields;
 
-	public CollectionFieldMapper(Field field, String prefix) {
+	public CollectionFieldMapper(MapperFactory factory, Field field, String prefix) {
 		super(field, prefix);
 
 		if (!Collection.class.isAssignableFrom(field.getType())) {
@@ -49,7 +49,7 @@ public class CollectionFieldMapper<M> extends AbstractFieldMapper<M> {
 			fields = new ArrayList<FieldMapper<Object>>();
 
 			for (Field embeddedField : fieldsToIndex) {
-				fields.add(MapperFactory.getMapper(embeddedField));
+				fields.add(factory.getMapper(embeddedField));
 			}
 		} else {
 			fields = null;

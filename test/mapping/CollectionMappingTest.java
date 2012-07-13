@@ -11,7 +11,6 @@ import play.db.jpa.Model;
 import play.modules.elasticsearch.annotations.ElasticSearchEmbedded;
 import play.modules.elasticsearch.annotations.ElasticSearchIgnore;
 import play.modules.elasticsearch.annotations.ElasticSearchable;
-import play.modules.elasticsearch.mapping.MapperFactory;
 import play.modules.elasticsearch.mapping.ModelMapper;
 
 /**
@@ -46,7 +45,7 @@ public class CollectionMappingTest extends MappingTest {
 	 */
 	@Test
 	public void testSimpleCollection() throws IOException {
-		ModelMapper<TestModel> mapper = MapperFactory.getMapper(TestModel.class);
+		ModelMapper<TestModel> mapper = getMapper(TestModel.class);
 		assertNotNull(mapper);
 
 		// Get generated mapping
@@ -81,7 +80,7 @@ public class CollectionMappingTest extends MappingTest {
 	 */
 	@Test
 	public void testObjectCollection() throws IOException {
-		ModelMapper<TestEmbeddedModel> mapper = MapperFactory.getMapper(TestEmbeddedModel.class);
+		ModelMapper<TestEmbeddedModel> mapper = getMapper(TestEmbeddedModel.class);
 		assertNotNull(mapper);
 
 		// Get generated mapping
