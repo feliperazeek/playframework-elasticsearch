@@ -10,7 +10,6 @@ import play.modules.elasticsearch.annotations.ElasticSearchEmbedded;
 import play.modules.elasticsearch.annotations.ElasticSearchEmbedded.Mode;
 import play.modules.elasticsearch.annotations.ElasticSearchIgnore;
 import play.modules.elasticsearch.annotations.ElasticSearchable;
-import play.modules.elasticsearch.mapping.MapperFactory;
 import play.modules.elasticsearch.mapping.ModelMapper;
 
 /**
@@ -74,7 +73,7 @@ public class EmbeddedMappingTest extends MappingTest {
 	 */
 	@Test
 	public void testNotMapped() throws IOException {
-		ModelMapper<NotMappedModel> mapper = MapperFactory.getMapper(NotMappedModel.class);
+		ModelMapper<NotMappedModel> mapper = getMapper(NotMappedModel.class);
 		assertNotNull(mapper);
 
 		// Get generated mapping
@@ -111,7 +110,7 @@ public class EmbeddedMappingTest extends MappingTest {
 	 */
 	@Test
 	public void testMapped() throws IOException {
-		ModelMapper<EmbeddedModel> mapper = MapperFactory.getMapper(EmbeddedModel.class);
+		ModelMapper<EmbeddedModel> mapper = getMapper(EmbeddedModel.class);
 		assertNotNull(mapper);
 
 		// Get generated mapping
@@ -148,8 +147,7 @@ public class EmbeddedMappingTest extends MappingTest {
 	 */
 	@Test
 	public void testMappedWithPrefix() throws IOException {
-		ModelMapper<EmbeddedPrefixModel> mapper = MapperFactory
-				.getMapper(EmbeddedPrefixModel.class);
+		ModelMapper<EmbeddedPrefixModel> mapper = getMapper(EmbeddedPrefixModel.class);
 		assertNotNull(mapper);
 
 		// Get generated mapping
@@ -186,8 +184,7 @@ public class EmbeddedMappingTest extends MappingTest {
 	 */
 	@Test
 	public void testMappedFields() throws IOException {
-		ModelMapper<EmbeddedFieldsModel> mapper = MapperFactory
-				.getMapper(EmbeddedFieldsModel.class);
+		ModelMapper<EmbeddedFieldsModel> mapper = getMapper(EmbeddedFieldsModel.class);
 		assertNotNull(mapper);
 
 		// Get generated mapping
@@ -227,7 +224,7 @@ public class EmbeddedMappingTest extends MappingTest {
 	 */
 	@Test
 	public void testNestedMode() throws IOException {
-		ModelMapper<NestedModel> mapper = MapperFactory.getMapper(NestedModel.class);
+		ModelMapper<NestedModel> mapper = getMapper(NestedModel.class);
 		assertNotNull(mapper);
 
 		// Get generated mapping
@@ -270,7 +267,7 @@ public class EmbeddedMappingTest extends MappingTest {
 	 */
 	@Test
 	public void testObjectMode() throws IOException {
-		ModelMapper<ObjectModel> mapper = MapperFactory.getMapper(ObjectModel.class);
+		ModelMapper<ObjectModel> mapper = getMapper(ObjectModel.class);
 		assertNotNull(mapper);
 
 		// Get generated mapping

@@ -27,7 +27,7 @@ public class EmbeddedFieldMapper<M> extends AbstractFieldMapper<M> {
 	private final ElasticSearchEmbedded embed;
 	private final List<FieldMapper<Object>> fields;
 
-	public EmbeddedFieldMapper(Field field, String prefix) {
+	public EmbeddedFieldMapper(MapperFactory factory, Field field, String prefix) {
 		super(field, prefix);
 
 		embed = field.getAnnotation(ElasticSearchEmbedded.class);
@@ -45,7 +45,7 @@ public class EmbeddedFieldMapper<M> extends AbstractFieldMapper<M> {
 		// Add fieldmappers for embedded fields
 		fields = new ArrayList<FieldMapper<Object>>();
 		for (Field embeddedField : getFieldsToIndex(field.getType(), embed)) {
-			fields.add(MapperFactory.getMapper(embeddedField, embedPrefix));
+			fields.add(factory.getMapper(embeddedField, embedPrefix));
 		}
 	}
 

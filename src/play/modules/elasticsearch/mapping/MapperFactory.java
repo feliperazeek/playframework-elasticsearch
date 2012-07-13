@@ -1,19 +1,11 @@
 package play.modules.elasticsearch.mapping;
 
 import java.lang.reflect.Field;
-import java.util.Collection;
-
-import play.modules.elasticsearch.annotations.ElasticSearchEmbedded;
-import play.modules.elasticsearch.mapping.impl.CollectionFieldMapper;
-import play.modules.elasticsearch.mapping.impl.EmbeddedFieldMapper;
-import play.modules.elasticsearch.mapping.impl.PlayModelMapper;
-import play.modules.elasticsearch.mapping.impl.SimpleFieldMapper;
 
 /**
- * Factory for {@link ModelMapper}s
+ * Factory for retrieving {@link ModelMapper}s and {@link FieldMapper}s
  */
-public class MapperFactory {
-
+public interface MapperFactory {
 	/**
 	 * Gets a {@link ModelMapper} for the specified model class
 	 * 
@@ -25,19 +17,7 @@ public class MapperFactory {
 	 *             in case of mapping problems
 	 * @return the model mapper
 	 */
-	@SuppressWarnings("unchecked")
-	public static <M> ModelMapper<M> getMapper(Class<M> clazz) throws MappingException {
-		if (!MappingUtil.isSearchable(clazz)) {
-			throw new MappingException("Class must be annotated with @ElasticSearchable");
-		}
-
-		if (play.db.Model.class.isAssignableFrom(clazz)) {
-			return (ModelMapper<M>) new PlayModelMapper<play.db.Model>((Class<play.db.Model>) clazz);
-		} else {
-			throw new MappingException(
-					"No mapper available for non-play.db.Model models at this time");
-		}
-	}
+	<M> ModelMapper<M> getMapper(Class<M> clazz) throws MappingException;
 
 	/**
 	 * Gets a {@link FieldMapper} for the specified field
@@ -50,11 +30,7 @@ public class MapperFactory {
 	 *             in case of mapping problems
 	 * @return the field mapper
 	 */
-	public static <M> FieldMapper<M> getMapper(Field field) throws MappingException {
-
-		return getMapper(field, null);
-
-	}
+	<M> FieldMapper<M> getMapper(Field field) throws MappingException;
 
 	/**
 	 * Gets a {@link FieldMapper} for the specified field, using a prefix in the
@@ -68,19 +44,5 @@ public class MapperFactory {
 	 *             in case of mapping problems
 	 * @return the field mapper
 	 */
-	public static <M> FieldMapper<M> getMapper(Field field, String prefix) throws MappingException {
-
-		if (Collection.class.isAssignableFrom(field.getType())) {
-			return new CollectionFieldMapper<M>(field, prefix);
-
-		} else if (field.isAnnotationPresent(ElasticSearchEmbedded.class)) {
-			return new EmbeddedFieldMapper<M>(field, prefix);
-
-		} else {
-			return new SimpleFieldMapper<M>(field, prefix);
-
-		}
-
-	}
-
+	<M> FieldMapper<M> getMapper(Field field, String prefix) throws MappingException;
 }
