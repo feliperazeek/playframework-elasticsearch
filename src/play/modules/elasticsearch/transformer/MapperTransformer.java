@@ -66,10 +66,16 @@ public class MapperTransformer<T extends Model> implements Transformer<T> {
         List<Float> scores = new ArrayList<Float>();
         List<Object[]> sortValues = new ArrayList<Object[]>();
 
-        ModelMapper<T> mapper = ElasticSearchPlugin.getMapper(clazz);
+        Class<T> hitClazz = clazz;
+        ModelMapper<T> mapper = ElasticSearchPlugin.getMapper(hitClazz);
 
 		// Loop on each one
 		for (SearchHit h : searchResponse.hits()) {
+			if (clazz.equals(play.db.Model.class)) {
+				 hitClazz = (Class<T>) ElasticSearchPlugin.lookupModel(h.getType());
+				 mapper = ElasticSearchPlugin.getMapper(hitClazz);
+			}
+			
 			// Get Data Map
 			Map<String, Object> map = h.sourceAsMap();
 			Logger.debug("Record Map: %s", map);
