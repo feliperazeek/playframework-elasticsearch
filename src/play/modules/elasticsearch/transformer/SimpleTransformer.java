@@ -27,6 +27,7 @@ import org.elasticsearch.search.SearchHit;
 
 import play.Logger;
 import play.db.Model;
+import play.modules.elasticsearch.ElasticSearchPlugin;
 import play.modules.elasticsearch.search.SearchResults;
 import play.modules.elasticsearch.util.ReflectionUtil;
 
@@ -63,10 +64,16 @@ public class SimpleTransformer<T extends Model> implements Transformer<T> {
         List<Object[]> sortValues = new ArrayList<Object[]>();
 
         // Loop on each one
+        Class<T> hitClazz = clazz;
 		for (SearchHit h : searchResponse.hits()) {
 			// Init Model Class
 			Logger.debug("Starting Record!");
-			T o = ReflectionUtil.newInstance(clazz);
+			if (clazz.equals(Model.class)) {
+				hitClazz = (Class<T>) ElasticSearchPlugin.lookupModel(h.getType());
+			}
+			T o = ReflectionUtil.newInstance(hitClazz);
+			 
+			
 
 			// Get Data Map
 			Map<String, Object> map = h.sourceAsMap();

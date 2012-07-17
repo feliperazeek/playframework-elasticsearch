@@ -28,6 +28,10 @@ public class DefaultMapperFactory implements MapperFactory {
 	 */
 	@SuppressWarnings("unchecked")
 	public <M> ModelMapper<M> getMapper(Class<M> clazz) throws MappingException {
+		if (clazz.equals(play.db.Model.class)) {
+			return (ModelMapper<M>) new UniversalModelMapper();
+		}
+		
 		if (!MappingUtil.isSearchable(clazz)) {
 			throw new MappingException("Class must be annotated with @ElasticSearchable");
 		}
