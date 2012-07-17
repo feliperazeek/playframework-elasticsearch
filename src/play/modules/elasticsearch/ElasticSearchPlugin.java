@@ -23,7 +23,9 @@ import static org.elasticsearch.node.NodeBuilder.nodeBuilder;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.apache.commons.lang.Validate;
 import org.elasticsearch.client.Client;
@@ -57,6 +59,9 @@ public class ElasticSearchPlugin extends PlayPlugin {
 	/** The started. */
 	private static boolean started = false;
 
+	/** Signals whether to save events instead of processing them asynchronously. */
+	private static boolean blockEvents = false;
+
 	/** The mapper factory */
 	private static MapperFactory mapperFactory = new DefaultMapperFactory();
 
@@ -66,8 +71,15 @@ public class ElasticSearchPlugin extends PlayPlugin {
 	/** The started indices. */
 	private static Set<Class<?>> indicesStarted = null;
 
+	/** Index type -> Class lookup */
+	private static Map<String, Class<?>> modelLookup = null;
+
 	/** The client. */
 	private static Client client = null;
+
+	private static final Queue<Model> blockedIndexOperations = new ConcurrentLinkedQueue<Model>();
+
+	private static final Queue<Model> blockedDeleteOperations = new ConcurrentLinkedQueue<Model>();
 
 	/**
 	 * Client.
@@ -78,8 +90,9 @@ public class ElasticSearchPlugin extends PlayPlugin {
 		return client;
 	}
 
-	public static void setMapperFactory(MapperFactory factory) {
+	public static void setMapperFactory(final MapperFactory factory) {
 		mapperFactory = factory;
+		mappers.clear();
 	}
 
 	/**
@@ -89,9 +102,8 @@ public class ElasticSearchPlugin extends PlayPlugin {
 	 */
 	private boolean isLocalMode() {
 		try {
-			String client = Play.configuration.getProperty("elasticsearch.client");
-			Boolean local = Boolean.getBoolean(Play.configuration.getProperty(
-					"elasticsearch.local", "true"));
+			final String client = Play.configuration.getProperty("elasticsearch.client");
+			final Boolean local = Boolean.getBoolean(Play.configuration.getProperty("elasticsearch.local", "true"));
 
 			if (client == null) {
 				return true;
@@ -101,7 +113,7 @@ public class ElasticSearchPlugin extends PlayPlugin {
 			}
 
 			return local;
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			Logger.error("Error! Starting in Local Model: %s", ExceptionUtil.getStackTrace(e));
 			return true;
 		}
@@ -113,7 +125,7 @@ public class ElasticSearchPlugin extends PlayPlugin {
 	 * @return the hosts
 	 */
 	public static String getHosts() {
-		String s = Play.configuration.getProperty("elasticsearch.client");
+		final String s = Play.configuration.getProperty("elasticsearch.client");
 		if (s == null) {
 			return "";
 		}
@@ -126,7 +138,7 @@ public class ElasticSearchPlugin extends PlayPlugin {
 	 * @return the delivery mode
 	 */
 	public static ElasticSearchDeliveryMode getDeliveryMode() {
-		String s = Play.configuration.getProperty("elasticsearch.delivery");
+		final String s = Play.configuration.getProperty("elasticsearch.delivery");
 		if (s == null) {
 			return ElasticSearchDeliveryMode.LOCAL;
 		}
@@ -134,8 +146,7 @@ public class ElasticSearchPlugin extends PlayPlugin {
 	}
 
 	/**
-	 * This method is called when the application starts - It will start ES
-	 * instance
+	 * This method is called when the application starts - It will start ES instance
 	 * 
 	 * @see play.PlayPlugin#onApplicationStart()
 	 */
@@ -143,6 +154,7 @@ public class ElasticSearchPlugin extends PlayPlugin {
 	public void onApplicationStart() {
 		// (re-)set caches
 		mappers = new HashMap<Class<?>, ModelMapper<?>>();
+		modelLookup = new HashMap<String, Class<?>>();
 		indicesStarted = new HashSet<Class<?>>();
 		ReflectionUtil.clearCache();
 
@@ -153,36 +165,34 @@ public class ElasticSearchPlugin extends PlayPlugin {
 		}
 
 		// Start Node Builder
-		Builder settings = ImmutableSettings.settingsBuilder();
+		final Builder settings = ImmutableSettings.settingsBuilder();
 		settings.put("client.transport.sniff", true);
 		settings.build();
 
 		// Check Model
 		if (this.isLocalMode()) {
 			Logger.info("Starting Elastic Search for Play! in Local Mode");
-			NodeBuilder nb = nodeBuilder().settings(settings).local(true).client(false).data(true);
-			Node node = nb.node();
+			final NodeBuilder nb = nodeBuilder().settings(settings).local(true).client(false).data(true);
+			final Node node = nb.node();
 			client = node.client();
 
 		} else {
 			Logger.info("Connecting Play! to Elastic Search in Client Mode");
-			TransportClient c = new TransportClient(settings);
+			final TransportClient c = new TransportClient(settings);
 			if (Play.configuration.getProperty("elasticsearch.client") == null) {
-				throw new RuntimeException(
-						"Configuration required - elasticsearch.client when local model is disabled!");
+				throw new RuntimeException("Configuration required - elasticsearch.client when local model is disabled!");
 			}
-			String[] hosts = getHosts().trim().split(",");
+			final String[] hosts = getHosts().trim().split(",");
 			boolean done = false;
-			for (String host : hosts) {
-				String[] parts = host.split(":");
+			for (final String host : hosts) {
+				final String[] parts = host.split(":");
 				if (parts.length != 2) {
 					throw new RuntimeException("Invalid Host: " + host);
 				}
 				Logger.info("Transport Client - Host: %s Port: %s", parts[0], parts[1]);
 				if (Integer.valueOf(parts[1]) == 9200)
 					Logger.info("Note: Port 9200 is usually used by the HTTP Transport. You might want to use 9300 instead.");
-				c.addTransportAddress(new InetSocketTransportAddress(parts[0], Integer
-						.valueOf(parts[1])));
+				c.addTransportAddress(new InetSocketTransportAddress(parts[0], Integer.valueOf(parts[1])));
 				done = true;
 			}
 			if (done == false) {
@@ -196,35 +206,34 @@ public class ElasticSearchPlugin extends PlayPlugin {
 
 		// Check Client
 		if (client == null) {
-			throw new RuntimeException(
-					"Elastic Search Client cannot be null - please check the configuration provided and the health of your Elastic Search instances.");
+			throw new RuntimeException("Elastic Search Client cannot be null - please check the configuration provided and the health of your Elastic Search instances.");
 		}
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <M> ModelMapper<M> getMapper(Class<M> clazz) {
+	public static <M> ModelMapper<M> getMapper(final Class<M> clazz) {
 		if (mappers.containsKey(clazz)) {
 			return (ModelMapper<M>) mappers.get(clazz);
 		}
 
-		ModelMapper<M> mapper = mapperFactory.getMapper(clazz);
+		final ModelMapper<M> mapper = mapperFactory.getMapper(clazz);
 		mappers.put(clazz, mapper);
+		modelLookup.put(mapper.getTypeName(), clazz);
 
 		return mapper;
 	}
 
-	private static void startIndexIfNeeded(Class<Model> clazz) {
+	private static void startIndexIfNeeded(final Class<Model> clazz) {
 		if (!indicesStarted.contains(clazz)) {
-			ModelMapper<Model> mapper = getMapper(clazz);
+			final ModelMapper<Model> mapper = getMapper(clazz);
 			Logger.info("Start Index for Class: %s", clazz);
 			ElasticSearchAdapter.startIndex(client(), mapper);
 			indicesStarted.add(clazz);
 		}
 	}
 
-	private static boolean isInterestingEvent(String event) {
-		return event.endsWith(".objectPersisted") || event.endsWith(".objectUpdated")
-				|| event.endsWith(".objectDeleted");
+	private static boolean isInterestingEvent(final String event) {
+		return event.endsWith(".objectPersisted") || event.endsWith(".objectUpdated") || event.endsWith(".objectDeleted");
 	}
 
 	/**
@@ -233,7 +242,7 @@ public class ElasticSearchPlugin extends PlayPlugin {
 	 * @see play.PlayPlugin#onEvent(java.lang.String, java.lang.Object)
 	 */
 	@Override
-	public void onEvent(String message, Object context) {
+	public void onEvent(final String message, final Object context) {
 		// Log Debug
 		Logger.info("Received %s Event, Object: %s", message, context);
 
@@ -253,33 +262,42 @@ public class ElasticSearchPlugin extends PlayPlugin {
 
 		// Start index if needed
 		@SuppressWarnings("unchecked")
-		Class<Model> clazz = (Class<Model>) context.getClass();
+		final Class<Model> clazz = (Class<Model>) context.getClass();
 		startIndexIfNeeded(clazz);
 
 		// Define Event
 		ElasticSearchIndexEvent event = null;
 		if (message.endsWith(".objectPersisted") || message.endsWith(".objectUpdated")) {
 			// Index Model
+			if (blockEvents) {
+				// If blocked, just enqueue the operation
+				blockedIndexOperations.offer((Model) context);
+				return;
+			}
 			event = new ElasticSearchIndexEvent((Model) context, ElasticSearchIndexEvent.Type.INDEX);
 
 		} else if (message.endsWith(".objectDeleted")) {
 			// Delete Model from Index
-			event = new ElasticSearchIndexEvent((Model) context,
-					ElasticSearchIndexEvent.Type.DELETE);
+			if (blockEvents) {
+				// If blocked, just enqueue the operation
+				blockedDeleteOperations.offer((Model) context);
+				return;
+			}
+			event = new ElasticSearchIndexEvent((Model) context, ElasticSearchIndexEvent.Type.DELETE);
 		}
 
 		// Sync with Elastic Search
 		Logger.info("Elastic Search Index Event: %s", event);
 		if (event != null) {
-			ElasticSearchDeliveryMode deliveryMode = getDeliveryMode();
-			IndexEventHandler handler = deliveryMode.getHandler();
+			final ElasticSearchDeliveryMode deliveryMode = getDeliveryMode();
+			final IndexEventHandler handler = deliveryMode.getHandler();
 			handler.handle(event);
 		}
 	}
 
-	<M extends Model> void index(M model) {
+	<M extends Model> void index(final M model) {
 		@SuppressWarnings("unchecked")
-		Class<Model> clazz = (Class<Model>) model.getClass();
+		final Class<Model> clazz = (Class<Model>) model.getClass();
 
 		// Check if object is searchable
 		if (MappingUtil.isSearchable(clazz) == false) {
@@ -288,10 +306,47 @@ public class ElasticSearchPlugin extends PlayPlugin {
 
 		startIndexIfNeeded(clazz);
 
-		ElasticSearchIndexEvent event = new ElasticSearchIndexEvent(model, Type.INDEX);
-		ElasticSearchDeliveryMode deliveryMode = getDeliveryMode();
-		IndexEventHandler handler = deliveryMode.getHandler();
+		final ElasticSearchIndexEvent event = new ElasticSearchIndexEvent(model, Type.INDEX);
+		final ElasticSearchDeliveryMode deliveryMode = getDeliveryMode();
+		final IndexEventHandler handler = deliveryMode.getHandler();
 		handler.handle(event);
+	}
+
+	public static void batchProcessBlockedOperations() {
+		Model model;
+		try {
+			while ((model = blockedIndexOperations.poll()) != null) {
+				@SuppressWarnings("unchecked")
+				final ModelMapper<Model> mapper = (ModelMapper<Model>) getMapper(model.getClass());
+
+				ElasticSearchAdapter.indexModel(client, mapper, model);
+			}
+			while ((model = blockedDeleteOperations.poll()) != null) {
+				@SuppressWarnings("unchecked")
+				final ModelMapper<Model> mapper = (ModelMapper<Model>) getMapper(model.getClass());
+				ElasticSearchAdapter.deleteModel(client, mapper, model);
+			}
+		} catch (final Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static boolean isBlockEvents() {
+		return blockEvents;
+	}
+
+	public static void setBlockEvents(final boolean blockEvents) {
+		ElasticSearchPlugin.blockEvents = blockEvents;
+	}
+
+	/**
+	 * Looks up the model class based on the index type name
+	 * 
+	 * @param indexType
+	 * @return Class of the Model
+	 */
+	public static Class<?> lookupModel(final String indexType) {
+		return modelLookup.get(indexType);
 	}
 
 }

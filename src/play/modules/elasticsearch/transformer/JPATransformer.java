@@ -3,7 +3,10 @@ package play.modules.elasticsearch.transformer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.SearchHit;
@@ -13,6 +16,7 @@ import play.data.binding.Binder;
 import play.db.Model;
 import play.db.jpa.JPQL;
 import play.exceptions.UnexpectedException;
+import play.modules.elasticsearch.ElasticSearchPlugin;
 import play.modules.elasticsearch.search.SearchResults;
 
 /**
@@ -34,45 +38,82 @@ public class JPATransformer<T extends Model> implements Transformer<T> {
 	 *            the clazz
 	 * @return the search results
 	 */
-	public SearchResults<T> toSearchResults(SearchResponse searchResponse, Class<T> clazz) {
+	public SearchResults<T> toSearchResults(SearchResponse searchResponse, final Class<T> clazz) {
 		// Get Total Records Found
 		long count = searchResponse.hits().totalHits();
 
 		// Get key information
-		Model.Factory factory = Model.Manager.factoryFor(clazz);
-		Class<?> keyType = factory.keyType();
-
-		// Loop on each one
-		List<Object> ids = new ArrayList<Object>();
-        List<Float> scores = new ArrayList<Float>();
+		Class<T> hitClazz = clazz;
+		Model.Factory factory;
+		Class<?> keyType = null;
+		if (!clazz.equals(Model.class)) {
+			factory = Model.Manager.factoryFor(hitClazz);
+			keyType = factory.keyType();
+		}
+		
+		
+		// Store object ids categorized by model
+		Map<Class<T>, List<Object>> allIds = new HashMap<Class<T>,List<Object>>();
+		// Store original order
+		Map<Class<T>, Map<Object, Integer>> order = new HashMap<Class<T>, Map<Object, Integer>>();
+        // Store scores and sortValues 
+		List<Float> scores = new ArrayList<Float>();
         List<Object[]> sortValues = new ArrayList<Object[]>();
+		Integer counter = 0;
+		// Loop on each one
 		for (SearchHit h : searchResponse.hits()) {
 			try {
-				ids.add(Binder.directBind(h.getId(), keyType));
+				// get key information if we work on general model
+				if (clazz.equals(Model.class)) {
+					hitClazz = (Class<T>) ElasticSearchPlugin.lookupModel(h.getType());
+					factory = Model.Manager.factoryFor(hitClazz);
+					keyType = factory.keyType();
+				}				
+				
+				Object id = Binder.directBind(h.getId(), keyType);
+			
+				// add id to the list
+				List<Object> modelIds = allIds.get(hitClazz);
+				if (modelIds == null) {
+					modelIds = new ArrayList<Object>();
+					allIds.put(hitClazz, modelIds);
+				}
+				modelIds.add(id);
+	
+				// mark order
+				Map<Object, Integer> modelOrder = order.get(hitClazz);
+				if (modelOrder == null) {
+					modelOrder = new HashMap<Object, Integer>();
+					order.put(hitClazz, modelOrder);
+				}
+				modelOrder.put(id, counter++);
+				
+	            scores.add(h.score());
+	            sortValues.add(h.sortValues());
+            
 			} catch (Exception e) {
 				throw new UnexpectedException(
 						"Could not convert the ID from index to corresponding type", e);
 			}
-            scores.add(h.score());
-            sortValues.add(h.sortValues());
         }
+		
+		Logger.debug("Model IDs returned by ES: %s", allIds);
 
-		Logger.debug("Model IDs returned by ES: %s", ids);
+		List<T> objects = new ArrayList<T>();
+		
+		// iterate over all models
+		for (Entry<Class<T>, List<Object>> entry : allIds.entrySet()) {
+			// get all ids for the model
+			List<T> modelObjects = loadFromDb(entry.getKey(), entry.getValue());
+			objects.addAll(modelObjects);
+		}
+		
+		sortByOrder(objects, order);
 
-		List<T> objects = null;
-
-		if (ids.size() > 0) {
-			// Fetch JPA entities from database while preserving ES result order
-			objects = loadFromDb(clazz, ids);
-			sortByIds(objects, ids);
-
-			// Make sure all items exist in the database
-			if (objects.size() != ids.size()) {
-				throw new IllegalStateException(
-						"Please re-index, not all indexed items are available in the database");
-			}
-		} else {
-			objects = Collections.emptyList();
+		// Make sure all items exist in the database
+		if (objects.size() != counter) {
+			throw new IllegalStateException(
+					"Please re-index, not all indexed items are available in the database");
 		}
 
 		Logger.debug("Models after sorting: %s", objects);
@@ -105,15 +146,15 @@ public class JPATransformer<T extends Model> implements Transformer<T> {
 	 * @param objects
 	 * @param ids
 	 */
-	private static <T extends Model> void sortByIds(List<T> objects, final List<Object> ids) {
+	private static <T extends Model> void sortByOrder(List<T> objects, final Map<Class<T>,Map<Object, Integer>> order) {
 		Collections.sort(objects, new Comparator<T>() {
 
 			@Override
 			public int compare(T arg0, T arg1) {
-				Integer idx1 = ids.indexOf(arg0._key());
-				Integer idx2 = ids.indexOf(arg1._key());
+				Integer idx0 = order.get(arg0.getClass()).get(arg0._key()); 
+				Integer idx1 = order.get(arg1.getClass()).get(arg1._key());
 
-				return idx1.compareTo(idx2);
+				return idx0.compareTo(idx1);
 			}
 		});
 	}
