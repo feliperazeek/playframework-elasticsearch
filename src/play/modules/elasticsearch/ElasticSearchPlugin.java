@@ -142,6 +142,8 @@ public class ElasticSearchPlugin extends PlayPlugin {
 		if (s == null) {
 			return ElasticSearchDeliveryMode.LOCAL;
 		}
+        if("CUSTOM".equals(s))
+            return ElasticSearchDeliveryMode.createCustomIndexEventHandler(Play.configuration.getProperty("elasticsearch.customIndexEventHandler", "play.modules.elasticsearch.LocalIndexEventHandler"));
 		return ElasticSearchDeliveryMode.valueOf(s.toUpperCase());
 	}
 
