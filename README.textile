@@ -124,20 +124,29 @@ h3. play.modules.elasticsearch.LocalIndexEventHandler
 This IndexEventHandler uses a EventStream introduces in Play 1.2. to handle index events.
 As the EventStream is limited to about 100 messages and then overflows, this is only a good candidate if you're not importing lots of documents at a time.
 The LocalIndexEventHandler is used by default or when setting
-elasticsearch.delivery = LOCAL
+
+bc. elasticsearch.delivery = LOCAL
+
 in your application.conf
 
+
 h3. play.modules.elasticsearch.rabbitmq.RabbitMQIndexEventHandler
+
 A IndexEventHandler using Akka and RabbitMQ for handling IndexEvents. 
 Use it by setting 
-elasticsearch.delivery = RABBITMQ
+
+bc. elasticsearch.delivery = RABBITMQ
+
 in your application.conf
 
 h3. Your own IndexEventHandler (new in 0.5)
+
 Since 0.5 you can specify your own IndexEventHandler without modifying the Plugin. To do this, create a class implementing play.modules.elasticsearch.IndexEventHandler
 somewhere in your Play Project, e.g. in a package called handlers and specify the following in your application.conf
-elasticsearch.delivery = CUSTOM
+
+bc. elasticsearch.delivery = CUSTOM
 elasticsearch.customIndexEventHandler = helpers.MyCustomIndexEventHandler
+
 
 Make sure your custom IndexEventHandler implements the interface mentioned above and does have a default no-args constructor. 
 
