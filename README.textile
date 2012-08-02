@@ -114,6 +114,8 @@ p. You should be able to search on http://localhost:9000/elasticSearchExample/in
 
 
 h2. Indexing
+
+
 The ElasticSearch Plugin features some strategies to configure the way your models are indexed.
 These strategies implement the Interface play.modules.elasticsearch.IndexEventHandler. There are two built-in IndexEventHandler implementations and since 0.5 a way to add your own:
 
