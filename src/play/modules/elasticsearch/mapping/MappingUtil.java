@@ -8,6 +8,9 @@ import java.util.Date;
 import org.apache.commons.lang.Validate;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
+import org.joda.time.LocalDate;
+import org.joda.time.LocalDateTime;
+import org.joda.time.base.BaseLocal;
 
 import play.Logger;
 import play.modules.elasticsearch.annotations.ElasticSearchField;
@@ -117,7 +120,7 @@ public abstract class MappingUtil {
 			return "double";
 		} else if (Byte.class.isAssignableFrom(clazz) || byte.class.isAssignableFrom(clazz)) {
 			return "byte";
-		} else if (Date.class.isAssignableFrom(clazz)) {
+		} else if (Date.class.isAssignableFrom(clazz) || BaseLocal.class.isAssignableFrom(clazz)) {
 			return "date";
 		} else if (Boolean.class.isAssignableFrom(clazz) || boolean.class.isAssignableFrom(clazz)) {
 			return "boolean";
@@ -140,6 +143,10 @@ public abstract class MappingUtil {
 			return new BigDecimal(value.toString());
 		} else if (targetType.equals(Date.class)) {
 			return convertToDate(value);
+		} else if (targetType.equals(LocalDateTime.class)) {
+			return LocalDateTime.parse(value.toString());
+		} else if (targetType.equals(LocalDate.class)) {
+			return LocalDate.parse(value.toString());
 
 			// Use Number intermediary where possible
 		} else if (targetType.equals(Integer.class)) {
