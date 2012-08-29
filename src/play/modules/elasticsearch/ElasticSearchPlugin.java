@@ -20,12 +20,14 @@ package play.modules.elasticsearch;
 
 import static org.elasticsearch.node.NodeBuilder.nodeBuilder;
 
-import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.apache.commons.lang.Validate;
@@ -144,7 +146,8 @@ public class ElasticSearchPlugin extends PlayPlugin {
 			return ElasticSearchDeliveryMode.LOCAL;
 		}
 		if ("CUSTOM".equals(s))
-			return ElasticSearchDeliveryMode.createCustomIndexEventHandler(Play.configuration.getProperty("elasticsearch.customIndexEventHandler", "play.modules.elasticsearch.LocalIndexEventHandler"));
+			return ElasticSearchDeliveryMode.createCustomIndexEventHandler(Play.configuration.getProperty(
+					"elasticsearch.customIndexEventHandler", "play.modules.elasticsearch.LocalIndexEventHandler"));
 		return ElasticSearchDeliveryMode.valueOf(s.toUpperCase());
 	}
 
@@ -156,9 +159,9 @@ public class ElasticSearchPlugin extends PlayPlugin {
 	@Override
 	public void onApplicationStart() {
 		// (re-)set caches
-		mappers = new ConcurrentHashMap<Class<?>, ModelMapper<?>>();
-		modelLookup = new ConcurrentHashMap<String, Class<?>>();
-		indicesStarted = Collections.newSetFromMap(new ConcurrentHashMap<Class<?>, Boolean>());
+		mappers = new HashMap<Class<?>, ModelMapper<?>>();
+		modelLookup = new HashMap<String, Class<?>>();
+		indicesStarted = new HashSet<Class<?>>();
 		ReflectionUtil.clearCache();
 
 		// Make sure it doesn't get started more than once
@@ -169,14 +172,14 @@ public class ElasticSearchPlugin extends PlayPlugin {
 
 		// Start Node Builder
 		final Builder settings = ImmutableSettings.settingsBuilder();
-		// settings.put("client.transport.sniff", true);
+		//settings.put("client.transport.sniff", true);
 
 		// Import anything from play configuration that starts with elasticsearch.native.
-		final Enumeration<Object> keys = Play.configuration.keys();
+		Enumeration<Object> keys = Play.configuration.keys();
 		while (keys.hasMoreElements()) {
-			final String key = (String) keys.nextElement();
+			String key = (String) keys.nextElement();
 			if (key.startsWith("elasticsearch.native.")) {
-				final String nativeKey = key.replaceFirst("elasticsearch.native.", "");
+				String nativeKey = key.replaceFirst("elasticsearch.native.", "");
 				Logger.error("Adding native [" + nativeKey + "," + Play.configuration.getProperty(key) + "]");
 				settings.put(nativeKey, Play.configuration.getProperty(key));
 			}
@@ -195,7 +198,8 @@ public class ElasticSearchPlugin extends PlayPlugin {
 			Logger.info("Connecting Play! to Elastic Search in Client Mode");
 			final TransportClient c = new TransportClient(settings);
 			if (Play.configuration.getProperty("elasticsearch.client") == null) {
-				throw new RuntimeException("Configuration required - elasticsearch.client when local model is disabled!");
+				throw new RuntimeException(
+						"Configuration required - elasticsearch.client when local model is disabled!");
 			}
 			final String[] hosts = getHosts().trim().split(",");
 			boolean done = false;
@@ -221,7 +225,8 @@ public class ElasticSearchPlugin extends PlayPlugin {
 
 		// Check Client
 		if (client == null) {
-			throw new RuntimeException("Elastic Search Client cannot be null - please check the configuration provided and the health of your Elastic Search instances.");
+			throw new RuntimeException(
+					"Elastic Search Client cannot be null - please check the configuration provided and the health of your Elastic Search instances.");
 		}
 	}
 
@@ -248,7 +253,8 @@ public class ElasticSearchPlugin extends PlayPlugin {
 	}
 
 	private static boolean isInterestingEvent(final String event) {
-		return event.endsWith(".objectPersisted") || event.endsWith(".objectUpdated") || event.endsWith(".objectDeleted");
+		return event.endsWith(".objectPersisted") || event.endsWith(".objectUpdated")
+				|| event.endsWith(".objectDeleted");
 	}
 
 	/**
@@ -284,7 +290,7 @@ public class ElasticSearchPlugin extends PlayPlugin {
 		ElasticSearchIndexEvent event = null;
 		if (message.endsWith(".objectPersisted") || message.endsWith(".objectUpdated")) {
 			// Index Model
-			if (isBlockEvents()) {
+			if (blockEvents) {
 				// If blocked, just enqueue the operation
 				blockedIndexOperations.offer((Model) context);
 				return;
@@ -293,7 +299,7 @@ public class ElasticSearchPlugin extends PlayPlugin {
 
 		} else if (message.endsWith(".objectDeleted")) {
 			// Delete Model from Index
-			if (isBlockEvents()) {
+			if (blockEvents) {
 				// If blocked, just enqueue the operation
 				blockedDeleteOperations.offer((Model) context);
 				return;
@@ -346,11 +352,11 @@ public class ElasticSearchPlugin extends PlayPlugin {
 		}
 	}
 
-	public static synchronized boolean isBlockEvents() {
+	public static boolean isBlockEvents() {
 		return blockEvents;
 	}
 
-	public static synchronized void setBlockEvents(final boolean blockEvents) {
+	public static void setBlockEvents(final boolean blockEvents) {
 		ElasticSearchPlugin.blockEvents = blockEvents;
 	}
 
