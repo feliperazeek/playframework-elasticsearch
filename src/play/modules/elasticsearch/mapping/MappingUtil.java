@@ -8,11 +8,15 @@ import java.util.Date;
 import org.apache.commons.lang.Validate;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
+import org.joda.time.LocalDate;
+import org.joda.time.LocalDateTime;
+import org.joda.time.base.BaseLocal;
 
 import play.Logger;
 import play.modules.elasticsearch.annotations.ElasticSearchField;
 import play.modules.elasticsearch.annotations.ElasticSearchField.Index;
 import play.modules.elasticsearch.annotations.ElasticSearchField.Store;
+import play.modules.elasticsearch.annotations.ElasticSearchFieldDescriptor;
 import play.modules.elasticsearch.util.ExceptionUtil;
 
 public abstract class MappingUtil {
@@ -70,29 +74,49 @@ public abstract class MappingUtil {
 	 *            the field name
 	 * @param type
 	 *            the field type
-	 * @param meta
-	 *            the ElasticSearchField annotation (optional) *
 	 * @throws IOException
 	 */
 	public static void addField(XContentBuilder builder, String name, String type,
-			ElasticSearchField meta) throws IOException {
+			ElasticSearchFieldDescriptor meta) throws IOException {
 		Validate.notEmpty(name, "name cannot be empty");
 		Validate.notEmpty(type, "type cannot be empty");
 
 		builder.startObject(name);
-		builder.field("type", type);
-
-		// Check for other settings
-		if (meta != null) {
-			if (meta.index() != Index.NOT_SET) {
-				builder.field("index", meta.index().toString());
+		if (meta.isMultiField()) {
+			builder.field("type", "multi_field");
+			builder.startObject("fields");
+			for (ElasticSearchField fieldMeta : meta.getFields()) {
+				if (fieldMeta.index() == Index.not_analyzed) {
+					builder.startObject("untouched");
+				} else {
+					builder.startObject(name);
+				}
+				builder.field("type", type);
+				if (fieldMeta != null) {
+					addIndexAndStoreInformation(builder, fieldMeta);
+				}
+				builder.endObject();
 			}
-			if (meta.store() != Store.NOT_SET) {
-				builder.field("store", meta.store().toString());
+			builder.endObject();
+		} else {
+			builder.field("type", type);
+			if (meta.hasField()) {
+				ElasticSearchField fieldMeta = meta.getField();
+				addIndexAndStoreInformation(builder, fieldMeta);
 			}
 		}
-
 		builder.endObject();
+
+	}
+
+	private static void addIndexAndStoreInformation(XContentBuilder builder, ElasticSearchField fieldMeta)
+			throws IOException {
+		if (fieldMeta.index() != Index.NOT_SET) {
+			builder.field("index", fieldMeta.index().toString());
+		}
+		if (fieldMeta.store() != Store.NOT_SET) {
+			builder.field("store", fieldMeta.store().toString());
+		}
 	}
 
 	/**
@@ -117,7 +141,7 @@ public abstract class MappingUtil {
 			return "double";
 		} else if (Byte.class.isAssignableFrom(clazz) || byte.class.isAssignableFrom(clazz)) {
 			return "byte";
-		} else if (Date.class.isAssignableFrom(clazz)) {
+		} else if (Date.class.isAssignableFrom(clazz) || BaseLocal.class.isAssignableFrom(clazz)) {
 			return "date";
 		} else if (Boolean.class.isAssignableFrom(clazz) || boolean.class.isAssignableFrom(clazz)) {
 			return "boolean";
@@ -140,6 +164,10 @@ public abstract class MappingUtil {
 			return new BigDecimal(value.toString());
 		} else if (targetType.equals(Date.class)) {
 			return convertToDate(value);
+		} else if (targetType.equals(LocalDateTime.class)) {
+			return LocalDateTime.parse(value.toString());
+		} else if (targetType.equals(LocalDate.class)) {
+			return LocalDate.parse(value.toString());
 
 			// Use Number intermediary where possible
 		} else if (targetType.equals(Integer.class)) {

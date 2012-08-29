@@ -4,7 +4,7 @@ import java.lang.reflect.Field;
 
 import org.apache.commons.lang.Validate;
 
-import play.modules.elasticsearch.annotations.ElasticSearchField;
+import play.modules.elasticsearch.annotations.ElasticSearchFieldDescriptor;
 import play.modules.elasticsearch.mapping.FieldMapper;
 import play.modules.elasticsearch.mapping.MappingUtil;
 import play.modules.elasticsearch.util.ReflectionUtil;
@@ -18,13 +18,13 @@ import play.modules.elasticsearch.util.ReflectionUtil;
 public abstract class AbstractFieldMapper<M> implements FieldMapper<M> {
 
 	protected final Field field;
-	protected final ElasticSearchField meta;
+	protected final ElasticSearchFieldDescriptor meta;
 	private final String prefix, indexField;
 
-	public AbstractFieldMapper(Field field, String prefix) {
+	public AbstractFieldMapper(final Field field, String prefix) {
 		Validate.notNull(field, "field cannot be null");
 		this.field = field;
-		this.meta = field.getAnnotation(ElasticSearchField.class);
+		this.meta = new ElasticSearchFieldDescriptor(field);
 		this.prefix = prefix;
 
 		// Maybe this a premature optimization, but getIndexField() will be
@@ -88,7 +88,7 @@ public abstract class AbstractFieldMapper<M> implements FieldMapper<M> {
 	 * @return
 	 */
 	protected String getIndexType() {
-		if (meta != null && meta.type().length() > 0) {
+		if (meta.hasType()) {
 			// Type was explicitly set, use it
 			return meta.type();
 
