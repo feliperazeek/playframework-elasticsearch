@@ -23,12 +23,8 @@ import static org.elasticsearch.node.NodeBuilder.nodeBuilder;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.apache.commons.lang.Validate;
 import org.elasticsearch.client.Client;
@@ -68,6 +64,8 @@ public class ElasticSearchPlugin extends PlayPlugin {
 	/** The mapper factory */
 	private static MapperFactory mapperFactory = new DefaultMapperFactory();
 
+	private static volatile ElasticSearchDeliveryMode currentDeliveryMode;
+
 	/** The mappers index. */
 	private static Map<Class<?>, ModelMapper<?>> mappers = null;
 
@@ -79,10 +77,6 @@ public class ElasticSearchPlugin extends PlayPlugin {
 
 	/** The client. */
 	private static Client client = null;
-
-	private static final Queue<Model> blockedIndexOperations = new ConcurrentLinkedQueue<Model>();
-
-	private static final Queue<Model> blockedDeleteOperations = new ConcurrentLinkedQueue<Model>();
 
 	/**
 	 * Client.
@@ -135,19 +129,26 @@ public class ElasticSearchPlugin extends PlayPlugin {
 		return s;
 	}
 
+	public static ElasticSearchDeliveryMode getDeliveryMode() {
+		return currentDeliveryMode;
+	}
+
+	public static void setDeliveryMode(final ElasticSearchDeliveryMode deliveryMode) {
+		currentDeliveryMode = deliveryMode;
+	}
+
 	/**
-	 * Gets the delivery mode.
+	 * Gets the delivery mode from the configuration.
 	 * 
 	 * @return the delivery mode
 	 */
-	public static ElasticSearchDeliveryMode getDeliveryMode() {
+	public static ElasticSearchDeliveryMode getDeliveryModeFromConfiguration() {
 		final String s = Play.configuration.getProperty("elasticsearch.delivery");
 		if (s == null) {
 			return ElasticSearchDeliveryMode.LOCAL;
 		}
 		if ("CUSTOM".equals(s))
-			return ElasticSearchDeliveryMode.createCustomIndexEventHandler(Play.configuration.getProperty(
-					"elasticsearch.customIndexEventHandler", "play.modules.elasticsearch.LocalIndexEventHandler"));
+			return ElasticSearchDeliveryMode.createCustomIndexEventHandler(Play.configuration.getProperty("elasticsearch.customIndexEventHandler", "play.modules.elasticsearch.LocalIndexEventHandler"));
 		return ElasticSearchDeliveryMode.valueOf(s.toUpperCase());
 	}
 
@@ -172,14 +173,14 @@ public class ElasticSearchPlugin extends PlayPlugin {
 
 		// Start Node Builder
 		final Builder settings = ImmutableSettings.settingsBuilder();
-		//settings.put("client.transport.sniff", true);
+		// settings.put("client.transport.sniff", true);
 
 		// Import anything from play configuration that starts with elasticsearch.native.
-		Enumeration<Object> keys = Play.configuration.keys();
+		final Enumeration<Object> keys = Play.configuration.keys();
 		while (keys.hasMoreElements()) {
-			String key = (String) keys.nextElement();
+			final String key = (String) keys.nextElement();
 			if (key.startsWith("elasticsearch.native.")) {
-				String nativeKey = key.replaceFirst("elasticsearch.native.", "");
+				final String nativeKey = key.replaceFirst("elasticsearch.native.", "");
 				Logger.error("Adding native [" + nativeKey + "," + Play.configuration.getProperty(key) + "]");
 				settings.put(nativeKey, Play.configuration.getProperty(key));
 			}
@@ -198,8 +199,7 @@ public class ElasticSearchPlugin extends PlayPlugin {
 			Logger.info("Connecting Play! to Elastic Search in Client Mode");
 			final TransportClient c = new TransportClient(settings);
 			if (Play.configuration.getProperty("elasticsearch.client") == null) {
-				throw new RuntimeException(
-						"Configuration required - elasticsearch.client when local model is disabled!");
+				throw new RuntimeException("Configuration required - elasticsearch.client when local model is disabled!");
 			}
 			final String[] hosts = getHosts().trim().split(",");
 			boolean done = false;
@@ -220,13 +220,15 @@ public class ElasticSearchPlugin extends PlayPlugin {
 			client = c;
 		}
 
+		// Configure current delivery mode
+		setDeliveryMode(getDeliveryModeFromConfiguration());
+
 		// Bind Admin
 		Router.addRoute("GET", "/es-admin", "elasticsearch.ElasticSearchAdmin.index");
 
 		// Check Client
 		if (client == null) {
-			throw new RuntimeException(
-					"Elastic Search Client cannot be null - please check the configuration provided and the health of your Elastic Search instances.");
+			throw new RuntimeException("Elastic Search Client cannot be null - please check the configuration provided and the health of your Elastic Search instances.");
 		}
 	}
 
@@ -253,8 +255,7 @@ public class ElasticSearchPlugin extends PlayPlugin {
 	}
 
 	private static boolean isInterestingEvent(final String event) {
-		return event.endsWith(".objectPersisted") || event.endsWith(".objectUpdated")
-				|| event.endsWith(".objectDeleted");
+		return event.endsWith(".objectPersisted") || event.endsWith(".objectUpdated") || event.endsWith(".objectDeleted");
 	}
 
 	/**
@@ -290,20 +291,10 @@ public class ElasticSearchPlugin extends PlayPlugin {
 		ElasticSearchIndexEvent event = null;
 		if (message.endsWith(".objectPersisted") || message.endsWith(".objectUpdated")) {
 			// Index Model
-			if (blockEvents) {
-				// If blocked, just enqueue the operation
-				blockedIndexOperations.offer((Model) context);
-				return;
-			}
 			event = new ElasticSearchIndexEvent((Model) context, ElasticSearchIndexEvent.Type.INDEX);
 
 		} else if (message.endsWith(".objectDeleted")) {
 			// Delete Model from Index
-			if (blockEvents) {
-				// If blocked, just enqueue the operation
-				blockedDeleteOperations.offer((Model) context);
-				return;
-			}
 			event = new ElasticSearchIndexEvent((Model) context, ElasticSearchIndexEvent.Type.DELETE);
 		}
 
@@ -317,6 +308,11 @@ public class ElasticSearchPlugin extends PlayPlugin {
 	}
 
 	<M extends Model> void index(final M model) {
+		final ElasticSearchDeliveryMode deliveryMode = getDeliveryMode();
+		index(model, deliveryMode);
+	}
+
+	public <M extends Model> void index(final M model, final ElasticSearchDeliveryMode deliveryMode) {
 		@SuppressWarnings("unchecked")
 		final Class<Model> clazz = (Class<Model>) model.getClass();
 
@@ -328,36 +324,8 @@ public class ElasticSearchPlugin extends PlayPlugin {
 		startIndexIfNeeded(clazz);
 
 		final ElasticSearchIndexEvent event = new ElasticSearchIndexEvent(model, Type.INDEX);
-		final ElasticSearchDeliveryMode deliveryMode = getDeliveryMode();
 		final IndexEventHandler handler = deliveryMode.getHandler();
 		handler.handle(event);
-	}
-
-	public static void batchProcessBlockedOperations() {
-		Model model;
-		try {
-			while ((model = blockedIndexOperations.poll()) != null) {
-				@SuppressWarnings("unchecked")
-				final ModelMapper<Model> mapper = (ModelMapper<Model>) getMapper(model.getClass());
-
-				ElasticSearchAdapter.indexModel(client, mapper, model);
-			}
-			while ((model = blockedDeleteOperations.poll()) != null) {
-				@SuppressWarnings("unchecked")
-				final ModelMapper<Model> mapper = (ModelMapper<Model>) getMapper(model.getClass());
-				ElasticSearchAdapter.deleteModel(client, mapper, model);
-			}
-		} catch (final Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	public static boolean isBlockEvents() {
-		return blockEvents;
-	}
-
-	public static void setBlockEvents(final boolean blockEvents) {
-		ElasticSearchPlugin.blockEvents = blockEvents;
 	}
 
 	/**

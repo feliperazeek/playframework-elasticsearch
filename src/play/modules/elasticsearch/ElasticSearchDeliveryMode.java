@@ -18,16 +18,12 @@
  */
 package play.modules.elasticsearch;
 
+import play.Logger;
 import play.Play;
 import play.modules.elasticsearch.rabbitmq.RabbitMQIndexEventHandler;
 
 /**
- * The ElasticSearchDeliveryMode specifies some predefined IndexEventHandlers,
- * but also allows to specify a custom IndexEventHandler in the classpath through
- * setting the following variables in conf/application.conf
- * elasticsearch.delivery=CUSTOM
- * # the name of the custom IndexEventHandler class
- * elasticsearch.customIndexEventHandler=service.MyCustomIndexEventHandler
+ * The ElasticSearchDeliveryMode specifies some predefined IndexEventHandlers, but also allows to specify a custom IndexEventHandler in the classpath through setting the following variables in conf/application.conf elasticsearch.delivery=CUSTOM # the name of the custom IndexEventHandler class elasticsearch.customIndexEventHandler=service.MyCustomIndexEventHandler
  */
 public class ElasticSearchDeliveryMode {
 
@@ -35,11 +31,22 @@ public class ElasticSearchDeliveryMode {
 	public final static ElasticSearchDeliveryMode LOCAL = new ElasticSearchDeliveryMode(new LocalIndexEventHandler());
 
 	/** The RABBITMQ. */
-    public final static ElasticSearchDeliveryMode RABBITMQ = new ElasticSearchDeliveryMode(new RabbitMQIndexEventHandler());
+	public final static ElasticSearchDeliveryMode RABBITMQ = new ElasticSearchDeliveryMode(new RabbitMQIndexEventHandler());
+
+	/** The Synchronous. */
+	public final static ElasticSearchDeliveryMode SYNCHRONOUS = new ElasticSearchDeliveryMode(new SynchronousIndexEventHandler());
+
+	/** The Discard all messages. */
+	public final static ElasticSearchDeliveryMode DISCARD = new ElasticSearchDeliveryMode(new IndexEventHandler() {
+		@Override
+		public void handle(final ElasticSearchIndexEvent event) {
+			Logger.info("Discarding index event %s", event);
+		}
+	});
 
 	private final IndexEventHandler handler;
 
-	ElasticSearchDeliveryMode(IndexEventHandler handler) {
+	ElasticSearchDeliveryMode(final IndexEventHandler handler) {
 		this.handler = handler;
 	}
 
@@ -47,29 +54,26 @@ public class ElasticSearchDeliveryMode {
 		return handler;
 	}
 
+	public static ElasticSearchDeliveryMode createCustomIndexEventHandler(final String clazzName) {
+		try {
+			final Class clazz = Play.classloader.loadClass(clazzName);
+			final IndexEventHandler handler = (IndexEventHandler) clazz.newInstance();
+			return new ElasticSearchDeliveryMode(handler);
+		} catch (final ClassNotFoundException e) {
+			throw new IllegalArgumentException("Illegal className " + clazzName + " specified or class not in classpath");
+		} catch (final InstantiationException e) {
+			throw new IllegalArgumentException("Couldn't instantiate IndexEventHandler " + clazzName);
+		} catch (final IllegalAccessException e) {
+			throw new IllegalArgumentException("Couldn't instantiate IndexEventHandler " + clazzName);
+		}
+	}
 
-    public static ElasticSearchDeliveryMode createCustomIndexEventHandler(String clazzName)
-    {
-        try {
-            Class clazz = Play.classloader.loadClass(clazzName);
-            IndexEventHandler handler = (IndexEventHandler) clazz.newInstance();
-            return new ElasticSearchDeliveryMode(handler);
-        } catch (ClassNotFoundException e) {
-            throw new IllegalArgumentException("Illegal className " + clazzName + " specified or class not in classpath");
-        } catch (InstantiationException e) {
-            throw new IllegalArgumentException("Couldn't instantiate IndexEventHandler " + clazzName);
-        } catch (IllegalAccessException e) {
-            throw new IllegalArgumentException("Couldn't instantiate IndexEventHandler " + clazzName);
-        }
-    }
-
-    public static ElasticSearchDeliveryMode valueOf(String s)
-    {
-        if("LOCAL".equals(s))
-            return LOCAL;
-        if("RABBITMQ".equals(s))
-            return RABBITMQ;
-        throw new IllegalArgumentException("Unspecified Mode given: " + s);
-    }
+	public static ElasticSearchDeliveryMode valueOf(final String s) {
+		if ("LOCAL".equals(s))
+			return LOCAL;
+		if ("RABBITMQ".equals(s))
+			return RABBITMQ;
+		throw new IllegalArgumentException("Unspecified Mode given: " + s);
+	}
 
 }
