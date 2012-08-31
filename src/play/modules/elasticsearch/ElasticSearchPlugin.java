@@ -20,11 +20,11 @@ package play.modules.elasticsearch;
 
 import static org.elasticsearch.node.NodeBuilder.nodeBuilder;
 
+import java.util.Collections;
 import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang.Validate;
 import org.elasticsearch.client.Client;
@@ -57,9 +57,6 @@ public class ElasticSearchPlugin extends PlayPlugin {
 
 	/** The started. */
 	private static boolean started = false;
-
-	/** Signals whether to save events instead of processing them asynchronously. */
-	private static boolean blockEvents = false;
 
 	/** The mapper factory */
 	private static MapperFactory mapperFactory = new DefaultMapperFactory();
@@ -160,9 +157,9 @@ public class ElasticSearchPlugin extends PlayPlugin {
 	@Override
 	public void onApplicationStart() {
 		// (re-)set caches
-		mappers = new HashMap<Class<?>, ModelMapper<?>>();
-		modelLookup = new HashMap<String, Class<?>>();
-		indicesStarted = new HashSet<Class<?>>();
+		mappers = new ConcurrentHashMap<Class<?>, ModelMapper<?>>();
+		modelLookup = new ConcurrentHashMap<String, Class<?>>();
+		indicesStarted = Collections.newSetFromMap(new ConcurrentHashMap<Class<?>, Boolean>());
 		ReflectionUtil.clearCache();
 
 		// Make sure it doesn't get started more than once
