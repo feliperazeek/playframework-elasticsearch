@@ -73,6 +73,10 @@ public class ElasticSearchDeliveryMode {
 			return LOCAL;
 		if ("RABBITMQ".equals(s))
 			return RABBITMQ;
+		if ("SYNCHRONOUS".equals(s))
+			return SYNCHRONOUS;
+		if ("DISCARD".equals(s))
+			return DISCARD;
 		throw new IllegalArgumentException("Unspecified Mode given: " + s);
 	}
 
