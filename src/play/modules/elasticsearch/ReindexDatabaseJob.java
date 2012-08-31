@@ -15,7 +15,7 @@ import play.modules.elasticsearch.mapping.MappingUtil;
 public class ReindexDatabaseJob extends Job<Void> {
 
 	// Fetch chunks of this size from DB
-	private static final int PAGE_SIZE = 100;
+	private static final int PAGE_SIZE = 256;
 
 	private final ElasticSearchDeliveryMode deliveryMode;
 
@@ -24,15 +24,22 @@ public class ReindexDatabaseJob extends Job<Void> {
 	 */
 	public ReindexDatabaseJob() {
 		// Do the whole task in a single thread by default
-		this(ElasticSearchDeliveryMode.SYNCHRONOUS);
+		this(null);
 	}
 
 	/**
 	 * Constructor which allows you to specify your own delivery mode for reindexing.
+	 * 
+	 * @param deliveryMode
+	 *            set null to use default {@link ElasticSearchDeliveryMode.SYNCHRONOUS}
 	 */
 	public ReindexDatabaseJob(final ElasticSearchDeliveryMode deliveryMode) {
 		super();
-		this.deliveryMode = deliveryMode;
+		if (deliveryMode == null) {
+			this.deliveryMode = ElasticSearchDeliveryMode.SYNCHRONOUS;
+		} else {
+			this.deliveryMode = deliveryMode;
+		}
 	}
 
 	@Override
@@ -56,12 +63,12 @@ public class ReindexDatabaseJob extends Job<Void> {
 			Logger.info("Reindexing %s entities of type %s", count, modelClass);
 
 			long offset = 0;
+			// loop over pages
 			while (offset < count) {
 				final List results = factory.fetch((int) offset, PAGE_SIZE, null, null, null, null, null);
+				// loop over individual entities within one page
 				for (final Object o : results) {
-					final Model model = (Model) o;
-					Logger.debug("indexing model %s", model);
-					ElasticSearch.index(model, deliveryMode);
+					ElasticSearch.index((Model) o, deliveryMode);
 				}
 				offset += PAGE_SIZE;
 			}

@@ -26,6 +26,7 @@ import org.elasticsearch.search.facet.AbstractFacetBuilder;
 
 import play.Play;
 import play.db.Model;
+import play.libs.F.Promise;
 import play.modules.elasticsearch.mapping.ModelMapper;
 import play.modules.elasticsearch.search.SearchResults;
 
@@ -169,6 +170,18 @@ public abstract class ElasticSearch {
 	public static <T extends Model> void index(final T model, final ElasticSearchDeliveryMode deliveryMode) {
 		final ElasticSearchPlugin plugin = Play.plugin(ElasticSearchPlugin.class);
 		plugin.index(model, deliveryMode);
+	}
+
+	/**
+	 * Reindexes the given model using provided delivery mode
+	 * 
+	 * @param deliveryMode
+	 *            Delivery mode to use for reindexing tasks. Set null to use the default, synchronous mode.
+	 * @param model
+	 *            the model
+	 */
+	public static Promise<Void> reindex(final ElasticSearchDeliveryMode deliveryMode) {
+		return new ReindexDatabaseJob(deliveryMode).now();
 	}
 
 }
