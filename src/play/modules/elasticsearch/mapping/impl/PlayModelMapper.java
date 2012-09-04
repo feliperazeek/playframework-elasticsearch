@@ -14,6 +14,7 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 
 import play.db.Model;
 import play.modules.elasticsearch.annotations.ElasticSearchIgnore;
+import play.modules.elasticsearch.annotations.ElasticSearchTtl;
 import play.modules.elasticsearch.annotations.ElasticSearchable;
 import play.modules.elasticsearch.mapping.FieldMapper;
 import play.modules.elasticsearch.mapping.MapperFactory;
@@ -130,6 +131,13 @@ public class PlayModelMapper<M extends Model> implements ModelMapper<M> {
 	@Override
 	public void addMapping(XContentBuilder builder) throws IOException {
 		builder.startObject(getTypeName());
+		if (clazz.isAnnotationPresent(ElasticSearchTtl.class)) {
+			String ttlValue = clazz.getAnnotation(ElasticSearchTtl.class).value();
+			builder.startObject("_ttl");
+			builder.field("enabled", true);
+			builder.field("default", ttlValue);
+			builder.endObject();
+		}
 		builder.startObject("properties");
 
 		for (FieldMapper<M> field : mapping) {
