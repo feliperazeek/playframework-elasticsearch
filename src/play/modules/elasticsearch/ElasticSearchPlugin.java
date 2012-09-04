@@ -340,7 +340,7 @@ public class ElasticSearchPlugin extends PlayPlugin {
 		}
 		final List<Class> searchableModels = Play.classloader.getAnnotatedClasses(ElasticSearchable.class);
 		for (final Class searchableModel : searchableModels) {
-			if (getMapper(searchableModel).getTypeName() == indexType) {
+			if (indexType.equals(getMapper(searchableModel).getTypeName())) {
 				return searchableModel;
 			}
 		}
