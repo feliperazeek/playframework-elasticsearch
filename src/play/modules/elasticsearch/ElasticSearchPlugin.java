@@ -44,6 +44,7 @@ import play.modules.elasticsearch.ElasticSearchIndexEvent.Type;
 import play.modules.elasticsearch.adapter.ElasticSearchAdapter;
 import play.modules.elasticsearch.annotations.ElasticSearchable;
 import play.modules.elasticsearch.mapping.MapperFactory;
+import play.modules.elasticsearch.mapping.MappingException;
 import play.modules.elasticsearch.mapping.MappingUtil;
 import play.modules.elasticsearch.mapping.ModelMapper;
 import play.modules.elasticsearch.mapping.impl.DefaultMapperFactory;
@@ -340,8 +341,12 @@ public class ElasticSearchPlugin extends PlayPlugin {
 		}
 		final List<Class> searchableModels = Play.classloader.getAnnotatedClasses(ElasticSearchable.class);
 		for (final Class searchableModel : searchableModels) {
-			if (indexType.equals(getMapper(searchableModel).getTypeName())) {
-				return searchableModel;
+			try {
+				if (indexType.equals(getMapper(searchableModel).getTypeName())) {
+					return searchableModel;
+				}
+			} catch (final MappingException ex) {
+				// mapper can not be retrieved
 			}
 		}
 		throw new IllegalArgumentException("Type name '" + indexType + "' is not searchable!");
