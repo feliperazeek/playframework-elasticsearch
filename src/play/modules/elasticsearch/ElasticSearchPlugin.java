@@ -22,6 +22,7 @@ import static org.elasticsearch.node.NodeBuilder.nodeBuilder;
 
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -41,7 +42,9 @@ import play.PlayPlugin;
 import play.db.Model;
 import play.modules.elasticsearch.ElasticSearchIndexEvent.Type;
 import play.modules.elasticsearch.adapter.ElasticSearchAdapter;
+import play.modules.elasticsearch.annotations.ElasticSearchable;
 import play.modules.elasticsearch.mapping.MapperFactory;
+import play.modules.elasticsearch.mapping.MappingException;
 import play.modules.elasticsearch.mapping.MappingUtil;
 import play.modules.elasticsearch.mapping.ModelMapper;
 import play.modules.elasticsearch.mapping.impl.DefaultMapperFactory;
@@ -332,7 +335,21 @@ public class ElasticSearchPlugin extends PlayPlugin {
 	 * @return Class of the Model
 	 */
 	public static Class<?> lookupModel(final String indexType) {
-		return modelLookup.get(indexType);
+		final Class<?> clazz = modelLookup.get(indexType);
+		if (clazz != null) { // we have not cached this model yet
+			return clazz;
+		}
+		final List<Class> searchableModels = Play.classloader.getAnnotatedClasses(ElasticSearchable.class);
+		for (final Class searchableModel : searchableModels) {
+			try {
+				if (indexType.equals(getMapper(searchableModel).getTypeName())) {
+					return searchableModel;
+				}
+			} catch (final MappingException ex) {
+				// mapper can not be retrieved
+			}
+		}
+		throw new IllegalArgumentException("Type name '" + indexType + "' is not searchable!");
 	}
 
 }
