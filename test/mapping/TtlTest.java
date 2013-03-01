@@ -5,6 +5,7 @@ import java.io.IOException;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.junit.Test;
 
+import play.db.jpa.Model;
 import play.modules.elasticsearch.annotations.ElasticSearchTtl;
 import play.modules.elasticsearch.annotations.ElasticSearchable;
 import play.modules.elasticsearch.mapping.ModelMapper;
@@ -14,7 +15,7 @@ public class TtlTest extends MappingTest {
 	@SuppressWarnings("serial")
 	@ElasticSearchable
 	@ElasticSearchTtl("10s")
-	public static class ObjectToMap {
+	public static class ObjectToMap extends Model {
 
 		public String name;
 
@@ -43,6 +44,10 @@ public class TtlTest extends MappingTest {
 		mapping.field("type", "string");
 		mapping.endObject();
 
+		mapping.startObject("id");
+		mapping.field("type", "long");
+		mapping.endObject();
+		
 		mapping.endObject();
 
 		mapping.endObject();
