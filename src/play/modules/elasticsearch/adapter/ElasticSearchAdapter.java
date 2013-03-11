@@ -26,6 +26,7 @@ import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.Requests;
+import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
@@ -66,9 +67,15 @@ public abstract class ElasticSearchAdapter {
 		String indexName = mapper.getIndexName();
 
 		try {
+			
+			XContentBuilder settings = MappingUtil.getSettingsMapper(mapper);
+			
 			Logger.debug("Starting Elastic Search Index %s", indexName);
 			CreateIndexResponse response = client.admin().indices()
-					.create(new CreateIndexRequest(indexName)).actionGet();
+					.create(new CreateIndexRequest(indexName)
+					.settings(ImmutableSettings.settingsBuilder().loadFromSource(settings.string())))
+					.actionGet();
+
 			Logger.debug("Response: %s", response);
 
 		} catch (IndexAlreadyExistsException iaee) {

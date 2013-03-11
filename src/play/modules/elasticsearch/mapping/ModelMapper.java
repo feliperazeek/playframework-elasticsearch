@@ -70,4 +70,13 @@ public interface ModelMapper<M> {
 	 * @return
 	 */
 	public M createModel(Map<String, Object> map);
+	
+	/**
+	 * Adds a settings mapping based on this model to the builder
+	 * 
+	 * @param builder
+	 *            the builder
+	 * @throws IOException
+	 */
+	public void addSettings(XContentBuilder builder) throws IOException;
 }

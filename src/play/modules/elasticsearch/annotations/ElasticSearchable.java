@@ -23,6 +23,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import play.modules.elasticsearch.annotations.analysis.ElasticSearchAnalysis;
+
+
 /**
  * The Interface ElasticSearchable.
  */
@@ -31,4 +34,6 @@ import java.lang.annotation.Target;
 public @interface ElasticSearchable {
 	/** The index name to use */
 	String indexName() default "";
+	
+	ElasticSearchAnalysis analysis() default @ElasticSearchAnalysis();
 }

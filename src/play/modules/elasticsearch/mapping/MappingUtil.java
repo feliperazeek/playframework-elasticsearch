@@ -64,6 +64,23 @@ public abstract class MappingUtil {
 
 		return builder;
 	}
+	
+	/**
+	 * Creates an {@link XContentBuilder} which contains a single settings mapping
+	 * 
+	 * @param mapper
+	 *            the mapping
+	 * @return the content builder
+	 * @throws IOException
+	 */
+	public static XContentBuilder getSettingsMapper(ModelMapper<?> mapper) throws IOException {
+		XContentBuilder builder = XContentFactory.jsonBuilder();
+		builder.startObject();
+		mapper.addSettings(builder);
+		builder.endObject();
+
+		return builder;
+	}
 
 	/**
 	 * Adds a field to the content builder
