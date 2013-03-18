@@ -50,5 +50,9 @@ public class UniversalModelMapper implements ModelMapper<Model> {
 	public Model createModel(final Map<String, Object> map) {
 		throw new UnsupportedOperationException("Model mapping is not supported with UniversalModelMapper");
 	}
+	
+	public void addSettings(XContentBuilder builder) throws IOException {
+		throw new UnsupportedOperationException("Model mapping is not supported with UniversalModelMapper");
+	}
 
 }

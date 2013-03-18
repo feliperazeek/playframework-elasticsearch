@@ -1,0 +1,11 @@
+require:
+    - play
+    - play -> crud
+    - localModule -> elasticsearch 0.5
+
+repositories: 
+    - localModule:
+        type: local
+        artifact: "${application.path}/../../dist/[module]-[revision].zip"
+        contains:
+            - localModule -> *

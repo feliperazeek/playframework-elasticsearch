@@ -16,6 +16,10 @@ import play.db.Model;
 import play.modules.elasticsearch.annotations.ElasticSearchIgnore;
 import play.modules.elasticsearch.annotations.ElasticSearchTtl;
 import play.modules.elasticsearch.annotations.ElasticSearchable;
+import play.modules.elasticsearch.annotations.analysis.ElasticSearchAnalysis;
+import play.modules.elasticsearch.annotations.analysis.ElasticSearchAnalyzer;
+import play.modules.elasticsearch.annotations.analysis.ElasticSearchFilter;
+import play.modules.elasticsearch.annotations.analysis.ElasticSearchSetting;
 import play.modules.elasticsearch.mapping.FieldMapper;
 import play.modules.elasticsearch.mapping.MapperFactory;
 import play.modules.elasticsearch.mapping.ModelMapper;
@@ -138,6 +142,7 @@ public class PlayModelMapper<M extends Model> implements ModelMapper<M> {
 			builder.field("default", ttlValue);
 			builder.endObject();
 		}
+		
 		builder.startObject("properties");
 
 		for (FieldMapper<M> field : mapping) {
@@ -145,6 +150,63 @@ public class PlayModelMapper<M extends Model> implements ModelMapper<M> {
 		}
 
 		builder.endObject();
+		builder.endObject();
+	}
+	
+	public void addSettings(XContentBuilder builder) throws IOException{
+
+		if(clazz.getAnnotation(ElasticSearchable.class).analysis() == null)
+			return;
+
+		ElasticSearchAnalysis analysis = clazz.getAnnotation(ElasticSearchable.class).analysis();
+		
+		if((analysis.analyzers() == null || analysis.analyzers().length < 1) && 
+		   (analysis.filters() == null || analysis.filters().length < 1))
+			return;
+		
+		builder.startObject("analysis");
+		
+		if(analysis.analyzers() != null && analysis.analyzers().length > 0){
+			builder.startObject("analyzer");
+
+			for (ElasticSearchAnalyzer analyzer : analysis.analyzers()) {
+				
+				builder.startObject(analyzer.name());
+				
+				if(analyzer.tokenizer() != null)
+					builder.field("tokenizer", analyzer.tokenizer());
+				
+				if(analyzer.filtersNames() != null && analyzer.filtersNames().length > 0)
+					builder.field("filter", analyzer.filtersNames());
+				
+				builder.endObject();
+			}
+			
+			builder.endObject();
+		}
+		
+		if(analysis.filters() != null && analysis.filters().length > 0){
+			
+			builder.startObject("filter");
+		
+			for (ElasticSearchFilter filter : analysis.filters()) {
+				
+				builder.startObject(filter.name());
+				
+				builder.field("type", filter.typeName());
+				
+				for (ElasticSearchSetting setting : filter.settings()) {
+					
+					builder.field(setting.name(), setting.value());
+					
+				}
+				
+				builder.endObject();
+			}
+			
+			builder.endObject();
+		}
+		
 		builder.endObject();
 	}
 
