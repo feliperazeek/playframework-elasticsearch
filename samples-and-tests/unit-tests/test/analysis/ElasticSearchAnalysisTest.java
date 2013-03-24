@@ -61,7 +61,7 @@ public class ElasticSearchAnalysisTest extends UnitTest {
 	@Test
 	public void testElasticSearchAnalyzerCustomFilters(){
 		
-		assertEquals("myEdgeNGram", indexSettings.get("index.analysis.analyzer.default.filter.2"));
-		assertEquals("myLength", indexSettings.get("index.analysis.analyzer.default.filter.3"));
+		assertEquals("myLength", indexSettings.get("index.analysis.analyzer.default.filter.2"));
+		assertEquals("myEdgeNGram", indexSettings.get("index.analysis.analyzer.default.filter.3"));
 	}
 }
