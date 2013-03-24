@@ -8,11 +8,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * ElasticsearchSetting Annotation
- * <p/>
- * This annotation is used to define elasticsearch {@link Settings}
- *
- * @author tlrx
+ * This annotation is used to define settings like custom filters
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
