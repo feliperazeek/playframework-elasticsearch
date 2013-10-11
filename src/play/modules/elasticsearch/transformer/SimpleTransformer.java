@@ -35,62 +35,61 @@ import play.modules.elasticsearch.util.ReflectionUtil;
  * The original transformer, as written by Felipe.
  * 
  * <p>
- * This transformer only supports basic mappings, without nested collections or
- * models.
+ * This transformer only supports basic mappings, without nested collections or models.
  * 
  * @param <T>
  *            the generic type
  */
 public class SimpleTransformer<T extends Model> implements Transformer<T> {
 
-	/**
-	 * To search results.
-	 * 
-	 * @param <T>
-	 *            the generic type
-	 * @param searchResponse
-	 *            the search response
-	 * @param clazz
-	 *            the clazz
-	 * @return the search results
-	 */
-	public SearchResults<T> toSearchResults(SearchResponse searchResponse, Class<T> clazz) {
-		// Get Total Records Found
-		long count = searchResponse.getHits().totalHits();
+    /**
+     * To search results.
+     * 
+     * @param <T>
+     *            the generic type
+     * @param searchResponse
+     *            the search response
+     * @param clazz
+     *            the clazz
+     * @return the search results
+     */
+    public SearchResults<T> toSearchResults(SearchResponse searchResponse, Class<T> clazz) {
+        // Get Total Records Found
+        long count = searchResponse.getHits().totalHits();
 
-		// Init List
-		List<T> objects = new ArrayList<T>();
-		List<Float> scores = new ArrayList<Float>();
-		List<Object[]> sortValues = new ArrayList<Object[]>();
+        // Init List
+        List<T> objects = new ArrayList<T>();
+        List<Float> scores = new ArrayList<Float>();
+        List<Object[]> sortValues = new ArrayList<Object[]>();
 
-		// Loop on each one
-		Class<T> hitClazz = clazz;
-		for (SearchHit h : searchResponse.getHits()) {
-			// Init Model Class
-			Logger.debug("Starting Record!");
-			if (clazz.equals(Model.class)) {
-				hitClazz = (Class<T>) ElasticSearchPlugin.lookupModel(h.getType());
-			}
-			T o = ReflectionUtil.newInstance(hitClazz);
+        // Loop on each one
+        Class<T> hitClazz = clazz;
+        for (SearchHit h : searchResponse.getHits()) {
+            // Init Model Class
+            Logger.debug("Starting Record!");
+            if (clazz.equals(Model.class)) {
+                hitClazz = (Class<T>) ElasticSearchPlugin.lookupModel(h.getType());
+            }
+            T o = ReflectionUtil.newInstance(hitClazz);
 
-			// Get Data Map
-			Map<String, Object> map = h.sourceAsMap();
-			Logger.debug("Record Map: %s", map);
+            // Get Data Map
+            Map<String, Object> map = h.sourceAsMap();
+            Logger.debug("Record Map: %s", map);
 
-			// Bind Data
-			for (Map.Entry<String, Object> e : map.entrySet()) {
-				ReflectionUtil.setFieldValue(o, e.getKey(), e.getValue());
-			}
+            // Bind Data
+            for (Map.Entry<String, Object> e : map.entrySet()) {
+                ReflectionUtil.setFieldValue(o, e.getKey(), e.getValue());
+            }
 
-			// Log Debug
-			Logger.debug("Model Instance: %s", o);
-			objects.add(o);
-			scores.add(h.score());
-			sortValues.add(h.sortValues());
-		}
+            // Log Debug
+            Logger.debug("Model Instance: %s", o);
+            objects.add(o);
+            scores.add(h.score());
+            sortValues.add(h.sortValues());
+        }
 
-		// Return Results
-		return new SearchResults<T>(count, objects, scores, sortValues, searchResponse.getFacets());
-	}
+        // Return Results
+        return new SearchResults<T>(count, objects, scores, sortValues, searchResponse.getFacets());
+    }
 
 }
