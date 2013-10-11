@@ -1,5 +1,6 @@
 package play.modules.elasticsearch.mapping.impl;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Map;
@@ -33,7 +34,9 @@ public class SimpleFieldMapper<M> extends AbstractFieldMapper<M> {
 	public void addToDocument(M model, XContentBuilder builder) throws IOException {
 		String field = getIndexField();
 		Object value = getFieldValue(model);
-
+		if (value.getClass() == File.class) {
+            value = org.elasticsearch.common.Base64.encodeFromFile(((File) value).getPath());
+        }
 		if (value != null) {
 			builder.field(field, value);
 		}
