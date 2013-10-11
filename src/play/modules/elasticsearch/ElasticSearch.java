@@ -1,12 +1,12 @@
-/** 
+/**
  * Copyright 2011 The Apache Software Foundation
- *
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,7 +22,7 @@ import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.search.facet.AbstractFacetBuilder;
+import org.elasticsearch.search.facet.FacetBuilder;
 
 import play.Play;
 import play.db.Model;
@@ -93,7 +93,7 @@ public abstract class ElasticSearch {
 	 * 
 	 * @return the search results
 	 */
-	public static <T extends Model> SearchResults<T> search(final QueryBuilder query, final Class<T> clazz, final AbstractFacetBuilder... facets) {
+	public static <T extends Model> SearchResults<T> search(final QueryBuilder query, final Class<T> clazz, final FacetBuilder... facets) {
 		return search(query, clazz, false, facets);
 	}
 
@@ -111,7 +111,7 @@ public abstract class ElasticSearch {
 	 * 
 	 * @return the search results
 	 */
-	public static <T extends Model> SearchResults<T> searchAndHydrate(final QueryBuilder queryBuilder, final Class<T> clazz, final AbstractFacetBuilder... facets) {
+	public static <T extends Model> SearchResults<T> searchAndHydrate(final QueryBuilder queryBuilder, final Class<T> clazz, final FacetBuilder... facets) {
 		return search(queryBuilder, clazz, true, facets);
 	}
 
@@ -131,7 +131,7 @@ public abstract class ElasticSearch {
 	 * 
 	 * @return the search results
 	 */
-	private static <T extends Model> SearchResults<T> search(final QueryBuilder query, final Class<T> clazz, final boolean hydrate, final AbstractFacetBuilder... facets) {
+	private static <T extends Model> SearchResults<T> search(final QueryBuilder query, final Class<T> clazz, final boolean hydrate, final FacetBuilder... facets) {
 		// Build a query for this search request
 		final Query<T> search = query(query, clazz);
 
@@ -139,7 +139,7 @@ public abstract class ElasticSearch {
 		search.hydrate(hydrate);
 
 		// Add facets
-		for (final AbstractFacetBuilder facet : facets) {
+		for (final FacetBuilder facet : facets) {
 			search.addFacet(facet);
 		}
 
@@ -176,7 +176,8 @@ public abstract class ElasticSearch {
 	 * Reindexes the given model using provided delivery mode
 	 * 
 	 * @param deliveryMode
-	 *            Delivery mode to use for reindexing tasks. Set null to use the default, synchronous mode.
+	 *            Delivery mode to use for reindexing tasks. Set null to use the
+	 *            default, synchronous mode.
 	 * @param model
 	 *            the model
 	 */

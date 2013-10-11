@@ -42,7 +42,7 @@ public class JPATransformer<T extends Model> implements Transformer<T> {
 	@Override
 	public SearchResults<T> toSearchResults(SearchResponse searchResponse, final Class<T> clazz) {
 		// Get Total Records Found
-		long count = searchResponse.hits().totalHits();
+		long count = searchResponse.getHits().totalHits();
 
 		// Get key information
 		Class<T> hitClazz = clazz;
@@ -62,7 +62,7 @@ public class JPATransformer<T extends Model> implements Transformer<T> {
 		List<Object[]> sortValues = new ArrayList<Object[]>();
 		Integer counter = 0;
 		// Loop on each one
-		for (SearchHit h : searchResponse.hits()) {
+		for (SearchHit h : searchResponse.getHits()) {
 			try {
 				// get key information if we work on general model
 				if (clazz.equals(Model.class)) {
@@ -93,8 +93,7 @@ public class JPATransformer<T extends Model> implements Transformer<T> {
 				sortValues.add(h.sortValues());
 
 			} catch (Exception e) {
-				throw new UnexpectedException(
-						"Could not convert the ID from index to corresponding type", e);
+				throw new UnexpectedException("Could not convert the ID from index to corresponding type", e);
 			}
 		}
 
@@ -114,8 +113,7 @@ public class JPATransformer<T extends Model> implements Transformer<T> {
 		// Make sure all items exist in the database
 		if (objects.size() != counter) {
 			if (shouldFailOnMissingObjects()) {
-				throw new IllegalStateException(
-						"Please re-index, not all indexed items are available in the database");
+				throw new IllegalStateException("Please re-index, not all indexed items are available in the database");
 			} else {
 				Logger.debug("Some Models not found in DB, continuing...");
 			}
@@ -124,7 +122,7 @@ public class JPATransformer<T extends Model> implements Transformer<T> {
 		Logger.debug("Models after sorting: %s", objects);
 
 		// Return Results
-		return new SearchResults<T>(count, objects, scores, sortValues, searchResponse.facets());
+		return new SearchResults<T>(count, objects, scores, sortValues, searchResponse.getFacets());
 	}
 
 	private boolean shouldFailOnMissingObjects() {
@@ -141,14 +139,14 @@ public class JPATransformer<T extends Model> implements Transformer<T> {
 	 */
 	private static <T extends Model> List<T> loadFromDb(Class<T> clazz, List<Object> ids) {
 		// JPA maps the "id" field to the key automatically
-		List<T> objects = JPQL.instance.find(clazz.getName(), "id in (?1)", new Object[] { ids })
-				.fetch();
+		List<T> objects = JPQL.instance.find(clazz.getName(), "id in (?1)", new Object[] { ids }).fetch();
 
 		return objects;
 	}
 
 	/**
-	 * Sort list of objects according to the order of their keys as defined by ids
+	 * Sort list of objects according to the order of their keys as defined by
+	 * ids
 	 * 
 	 * @param <T>
 	 * @param objects
