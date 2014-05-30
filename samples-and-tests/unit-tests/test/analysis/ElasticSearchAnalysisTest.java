@@ -27,7 +27,7 @@ public class ElasticSearchAnalysisTest extends UnitTest {
         ClusterStateResponse response = adminClient.cluster().prepareState()
                 .execute().actionGet();
 
-        indexSettings = response.state().metaData().index("models_product").settings();
+        indexSettings = response.getState().metaData().index("models_product").settings();
 	}
 	
 	@Test
