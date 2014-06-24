@@ -33,7 +33,7 @@ public class DefaultMapperFactory implements MapperFactory {
 		}
 		
 		if (!MappingUtil.isSearchable(clazz)) {
-			throw new MappingException("Class must be annotated with @ElasticSearchable");
+			throw new MappingException("Class \"" + clazz.getCanonicalName() + "\" must be annotated with @ElasticSearchable");
 		}
 
 		if (play.db.Model.class.isAssignableFrom(clazz)) {
