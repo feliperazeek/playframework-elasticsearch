@@ -59,7 +59,7 @@ public class MapperTransformer<T extends Model> implements Transformer<T> {
 	 */
 	public SearchResults<T> toSearchResults(SearchResponse searchResponse, Class<T> clazz) {
 		// Get Total Records Found
-		long count = searchResponse.hits().totalHits();
+    long count = searchResponse.getHits().totalHits();
 
 		// Init List
 		List<T> objects = new ArrayList<T>();
@@ -69,9 +69,9 @@ public class MapperTransformer<T extends Model> implements Transformer<T> {
         Class<T> hitClazz = clazz;
         ModelMapper<T> mapper = ElasticSearchPlugin.getMapper(hitClazz);
 
-		// Loop on each one
-		for (SearchHit h : searchResponse.hits()) {
-			if (clazz.equals(play.db.Model.class)) {
+    // Loop on each one
+    for (SearchHit h : searchResponse.getHits()) {
+      if (clazz.equals(play.db.Model.class)) {
 				 hitClazz = (Class<T>) ElasticSearchPlugin.lookupModel(h.getType());
 				 mapper = ElasticSearchPlugin.getMapper(hitClazz);
 			}
@@ -90,8 +90,8 @@ public class MapperTransformer<T extends Model> implements Transformer<T> {
             sortValues.add(h.sortValues());
         }
 
-		// Return Results
-		return new SearchResults<T>(count, objects, scores, sortValues, searchResponse.facets());
-	}
+    // Return Results
+    return new SearchResults<T>(count, objects, scores, sortValues, searchResponse.getFacets());
+  }
 
 }

@@ -5,8 +5,9 @@ self: play -> elasticsearch 0.5
 require:
     - play
     - play -> crud
-    - org.elasticsearch -> elasticsearch 0.19.3
+    - org.elasticsearch -> elasticsearch 0.90.3
     - se.scalablesolutions.akka -> akka-amqp 1.1.2
+    - org.elasticsearch -> elasticsearch-mapper-attachments 1.9.0
     
     
 repositories:

@@ -1,5 +1,6 @@
 package play.modules.elasticsearch.mapping;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.math.BigDecimal;
@@ -162,7 +163,9 @@ public abstract class MappingUtil {
 			return "date";
 		} else if (Boolean.class.isAssignableFrom(clazz) || boolean.class.isAssignableFrom(clazz)) {
 			return "boolean";
-		}
+		} else if (File.class.isAssignableFrom(clazz) || File.class.isAssignableFrom(clazz)) {
+          return "attachment";
+        }
 
 		// Fall back to string mapping
 		return "string";

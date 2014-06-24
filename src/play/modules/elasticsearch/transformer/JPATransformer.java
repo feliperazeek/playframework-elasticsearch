@@ -42,7 +42,7 @@ public class JPATransformer<T extends Model> implements Transformer<T> {
 	@Override
 	public SearchResults<T> toSearchResults(SearchResponse searchResponse, final Class<T> clazz) {
 		// Get Total Records Found
-		long count = searchResponse.hits().totalHits();
+    long count = searchResponse.getHits().totalHits();
 
 		// Get key information
 		Class<T> hitClazz = clazz;
@@ -62,8 +62,8 @@ public class JPATransformer<T extends Model> implements Transformer<T> {
 		List<Object[]> sortValues = new ArrayList<Object[]>();
 		Integer counter = 0;
 		// Loop on each one
-		for (SearchHit h : searchResponse.hits()) {
-			try {
+    for (SearchHit h : searchResponse.getHits()) {
+     	try {
 				// get key information if we work on general model
 				if (clazz.equals(Model.class)) {
 					hitClazz = (Class<T>) ElasticSearchPlugin.lookupModel(h.getType());
@@ -123,9 +123,9 @@ public class JPATransformer<T extends Model> implements Transformer<T> {
 
 		Logger.debug("Models after sorting: %s", objects);
 
-		// Return Results
-		return new SearchResults<T>(count, objects, scores, sortValues, searchResponse.facets());
-	}
+    // Return Results
+    return new SearchResults<T>(count, objects, scores, sortValues, searchResponse.getFacets());
+  }
 
 	private boolean shouldFailOnMissingObjects() {
 		return Boolean.getBoolean(Play.configuration.getProperty("elasticsearch.failOnMissingObjects", "true"));
