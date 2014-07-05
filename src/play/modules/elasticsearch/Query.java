@@ -7,7 +7,7 @@ import org.apache.commons.lang.Validate;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.search.facet.AbstractFacetBuilder;
+import org.elasticsearch.search.facet.FacetBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
@@ -29,7 +29,7 @@ public class Query<T extends Model> {
 
 	private final Class<T> clazz;
 	private final QueryBuilder builder;
-	private final List<AbstractFacetBuilder> facets;
+	private final List<FacetBuilder> facets;
 	private final List<SortBuilder> sorts;
 
 	private int from = -1;
@@ -43,7 +43,7 @@ public class Query<T extends Model> {
 		Validate.notNull(builder, "builder cannot be null");
 		this.clazz = clazz;
 		this.builder = builder;
-		this.facets = new ArrayList<AbstractFacetBuilder>();
+		this.facets = new ArrayList<FacetBuilder>();
 		this.sorts = new ArrayList<SortBuilder>();
 	}
 
@@ -106,7 +106,7 @@ public class Query<T extends Model> {
 	 *            the facet
 	 * @return self
 	 */
-	public Query<T> addFacet(AbstractFacetBuilder facet) {
+	public Query<T> addFacet(FacetBuilder facet) {
 		Validate.notNull(facet, "facet cannot be null");
 		facets.add(facet);
 
@@ -154,7 +154,7 @@ public class Query<T extends Model> {
 		SearchRequestBuilder request = ElasticSearch.builder(builder, clazz);
 
 		// Facets
-		for (AbstractFacetBuilder facet : facets) {
+		for (FacetBuilder facet : facets) {
 			request.addFacet(facet);
 		}
 
