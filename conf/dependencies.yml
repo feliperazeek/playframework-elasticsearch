@@ -10,12 +10,6 @@ require:
     
     
 repositories:
-    - elasticsearch:
-        type: iBiblio
-        root: "http://oss.sonatype.org/content/repositories/releases/"
-        contains:
-            - org.elasticsearch -> *
-            
     - akka:
         type: iBiblio
         root: "http://repo.typesafe.com/typesafe/akka-releases-cache/"
