@@ -5,6 +5,8 @@ import java.util.Set;
 
 import javax.persistence.metamodel.ManagedType;
 
+import org.hibernate.Session;
+
 import play.Logger;
 import play.db.Model;
 import play.db.Model.Factory;
@@ -62,6 +64,7 @@ public class ReindexDatabaseJob extends Job<Void> {
 
 			Logger.info("Reindexing %s entities of type %s", count, modelClass);
 
+			Session session = (Session) JPA.em().getDelegate();
 			long offset = 0;
 			// loop over pages
 			while (offset < count) {
@@ -70,6 +73,7 @@ public class ReindexDatabaseJob extends Job<Void> {
 				for (final Object o : results) {
 					ElasticSearch.index((Model) o, deliveryMode);
 				}
+				session.clear();
 				offset += PAGE_SIZE;
 			}
 		}
