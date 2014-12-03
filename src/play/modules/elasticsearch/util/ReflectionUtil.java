@@ -19,10 +19,7 @@
 package play.modules.elasticsearch.util;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -121,7 +118,10 @@ public abstract class ReflectionUtil {
 	public static Object getFieldValue(Object object, Field field) {
 		try {
 			field.setAccessible(true);
-			return field.get(object);
+			String fieldName = field.getName();
+			String methodName = "get" + Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
+			return object.getClass().getMethod(methodName).invoke(object);
+		} catch (NoSuchMethodException e) {
 		} catch (Exception e) {
 			Logger.warn(ExceptionUtil.getStackTrace(e));
 			// throw new RuntimeException( e );
@@ -146,8 +146,7 @@ public abstract class ReflectionUtil {
 			while (clazz != null) {
 				for (Field field : clazz.getDeclaredFields()) {
 					if (field.getName().equals(fieldName)) {
-						field.setAccessible(true);
-						return field.get(object);
+						return getFieldValue(object, field);
 					}
 				}
 				clazz = clazz.getSuperclass();
